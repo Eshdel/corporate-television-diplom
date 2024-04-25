@@ -1,0 +1,36 @@
+.timeline-wrapper{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.time-labels-wrapper  {
+    width: 100%;
+    display: flex;
+    grap:32px;
+     overflow-x: auto;
+     scrollbar-color: transparent transparent;
+     user-select: none;
+     background-color: blue;
+}
+.items-content-wrapper {
+    width: 100%;
+    display: flex;
+    grap:32px;
+    overflow-x: auto;
+    scrollbar-color: transparent transparent;
+    user-select: none;
+    background-color: red;
+}
+
+.time-labels-wrapper::-webkit-scrollbar{}
+.items-content-wrapper::-webkit-scrollbar{}
+
+.hour-label{
+    min-width: 300px;
+}
+
+.item{
+    min-width: 500px;
+    background-color: blueviolet;
+}
