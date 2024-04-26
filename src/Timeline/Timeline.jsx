@@ -5,17 +5,16 @@ const Timeline = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const timeLabelsRef = useRef(null);
   const itemsContentRef = useRef(null);
-  const [emptyItems, setEmptyItems] = useState([]);
 
-  useEffect(() => {
-    if (timeLabelsRef.current && itemsContentRef.current) {
-      const labelsWidth = timeLabelsRef.current.scrollWidth;
-      const itemsWidth = itemsContentRef.current.scrollWidth;
-      const itemCount = Math.ceil((labelsWidth - itemsWidth) / getItemWidth());
-      const emptyItemsArray = Array(itemCount).fill(null);
-      setEmptyItems(emptyItemsArray);
-    }
-  }, []);
+  const items = [
+    { name: 'Item 1', startTime: '0', duration: '0.1'},
+    { name: 'Item 2', startTime: '1', duration: '1'},
+    { name: 'Item 3', startTime: '2.1', duration: '2'}
+  ];
+
+  function getItemReact(item) {
+    return {name: item.name,left: item.startTime * 300, width: item.duration * 300}    
+  }
 
   // Обработчик события прокрутки
   const handleScroll = (e) => {
@@ -26,11 +25,6 @@ const Timeline = () => {
       timeLabelsRef.current.scrollLeft = scrollLeft;
       itemsContentRef.current.scrollLeft = scrollLeft;
     }
-  };
-
-  // Получение ширины элемента
-  const getItemWidth = () => {
-    return 500; // Ваша логика для вычисления ширины элемента
   };
 
   // Генерация временных меток для панели времени
@@ -46,25 +40,50 @@ const Timeline = () => {
     return labels;
   };
 
-  // Генерация элементов контента
-  const generateItems = () => {
-    const labels = [];
-    for (let hour = 0; hour < 10; hour++) {
-      labels.push(
-        <div key={hour} className="item">
-          item {hour}
+  function generateItemLabels (items) {
+    const itemsReact = [];
+    
+    let prevItemRight = 0; // Переменная для хранения правой границы предыдущего элемента
+  
+    for (let i = 0; i < items.length; i++) {
+      const currentItem = getItemReact(items[i]);
+      
+      // Определяем ширину и левый отступ для текущего элемента
+      const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
+      const itemLeft = parseFloat(currentItem.left); // Преобразуем левый отступ в число
+  
+      // Проверяем, нужно ли добавить пустое пространство между предыдущим и текущим элементом
+      if (itemLeft > prevItemRight) {
+        const emptyWidth = itemLeft - prevItemRight; // Вычисляем ширину пустого пространства
+        const spaceItem = (
+          <div key={`spaceItem-${i}`} className="spaceItem" style={{ minWidth: `${emptyWidth}px`, backgroundColor: 'white' }}></div>
+        );
+        itemsReact.push(spaceItem); // Добавляем пустое пространство
+      }
+      
+      // Создаём элемент React для текущего элемента
+      const itemElement = (
+        <div key={currentItem.name} className="item" style={{ minWidth: `${itemWidth}px`, left: currentItem.left }}>
+          {currentItem.name}
         </div>
       );
+  
+      itemsReact.push(itemElement); // Добавляем текущий элемент в список
+  
+      prevItemRight = itemLeft + itemWidth; // Обновляем правую границу предыдущего элемента
     }
-    return labels;
-  };
+  
+    if(timeLabelsRef.current && prevItemRight < timeLabelsRef.current.scrollWidth){
+      const emptyWidth = timeLabelsRef.current.scrollWidth - prevItemRight; // Вычисляем ширину пустого пространства
+      const spaceItem = (
+        <div key={`spaceItem-end`} className="spaceItem" style={{ minWidth: `${emptyWidth}px`, backgroundColor: 'black' }}></div>
+      );
 
-  // Генерация пустых элементов
-  const generateEmptyItems = () => {
-    return emptyItems.map((_, index) => (
-      <div key={`empty-${index}`} className="item empty"></div>
-    ));
-  };
+      itemsReact.push(spaceItem);
+    }
+
+    return itemsReact;
+  }
 
   return (
     <div className="timeline-wrapper">
@@ -80,8 +99,7 @@ const Timeline = () => {
         onScroll={handleScroll}
         ref={itemsContentRef}
       >
-        {generateItems()}
-        {generateEmptyItems()}
+        {generateItemLabels(items)}
       </div>
     </div>
   );
