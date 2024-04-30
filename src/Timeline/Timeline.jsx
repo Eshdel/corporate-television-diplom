@@ -5,15 +5,43 @@ const Timeline = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const timeLabelsRef = useRef(null);
   const itemsContentRef = useRef(null);
+  const [zoom, setZoom] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
 
   const items = [
     { name: 'Item 1', startTime: '0', duration: '0.1'},
     { name: 'Item 2', startTime: '1', duration: '1'},
     { name: 'Item 3', startTime: '2.1', duration: '2'}
   ];
+  
+  const zoomIn = () => {
+    setZoom(zoom + 0.25);
+  };
+  
+  const zoomOut = () => {
+    if (zoom > 0.25) {
+      setZoom(zoom - 0.25);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "6") {
+        zoomIn();
+      } else if (event.key === "7") {
+        zoomOut();
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [zoomIn, zoomOut]);
+
 
   function getItemReact(item) {
-    return {name: item.name,left: item.startTime * 300, width: item.duration * 300}    
+    return {name: item.name, left: item.startTime * 300 * zoom, width: item.duration * 300 * zoom}    
   }
 
   // Обработчик события прокрутки
@@ -32,7 +60,7 @@ const Timeline = () => {
     const labels = [];
     for (let hour = 0; hour < 24; hour++) {
       labels.push(
-        <div key={hour} className="hour-label">
+        <div key={hour} className="hour-label" style={{ minWidth: `${300 * zoom}px`}}>
           {hour}:00
         </div>
       );
@@ -81,7 +109,6 @@ const Timeline = () => {
 
       itemsReact.push(spaceItem);
     }
-
     return itemsReact;
   }
 

@@ -33,3 +33,13 @@
 .item{
     background-color: blueviolet;
 }
+
+.Useless {
+    width: 100%;
+    display: flex;
+    grap:32px;
+    overflow-x: auto;
+    scrollbar-color: transparent transparent;
+    user-select: none;
+    background-color: red;
+}
