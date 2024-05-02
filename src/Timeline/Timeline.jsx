@@ -2,24 +2,92 @@ import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
 const Timeline = () => {
+  const widthLabels = 300;
+
   const [scrollPosition, setScrollPosition] = useState(0);
   const timeLabelsRef = useRef(null);
   const itemsContentRef = useRef(null);
-  const [zoom, setZoom] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
+  
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dragStartPosition, setDragStartPosition] = useState(null);
 
+  const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
+  const [scale, setScale] = useState(1);
+  
   const items = [
-    { name: 'Item 1', startTime: '0', duration: '0.1'},
+    { name: 'Item 1', startTime: '0', duration: '0.03125'},
     { name: 'Item 2', startTime: '1', duration: '1'},
     { name: 'Item 3', startTime: '2.1', duration: '2'}
   ];
   
+  const handleMouseDown = (e, item) => {
+    setDraggedItem(item);
+    setDragStartPosition({
+      x: e.clientX,
+      left: parseFloat(e.target.style.left),
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (draggedItem) {
+      const deltaX = e.clientX - dragStartPosition.x;
+      const newLeft = dragStartPosition.left + deltaX;
+      e.target.style.left = `${newLeft}px`;
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDraggedItem(null);
+    setDragStartPosition(null);
+  };
+
+  useEffect(() => {
+    const handleMouseUpOutside = () => {
+      if (draggedItem) {
+        setDraggedItem(null);
+        setDragStartPosition(null);
+      }
+    };
+
+    window.addEventListener("mouseup", handleMouseUpOutside);
+
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUpOutside);
+    };
+  }, [draggedItem]);
+
   const zoomIn = () => {
-    setZoom(zoom + 0.25);
+    if(zoomMod < 5) {
+      setZoomMod(zoomMod + 1);
+    }
   };
   
   const zoomOut = () => {
-    if (zoom > 0.25) {
-      setZoom(zoom - 0.25);
+    if (zoomMod > 0) {
+      setZoomMod(zoomMod - 1);
+    }
+  };
+
+  const updateScale = () => {
+    switch(zoomMod) {
+      case 0:
+        setScale(0.5);
+        break
+      case 1:
+        setScale(1);
+        break
+      case 2:
+        setScale(2);
+        break
+      case 3:
+        setScale(6);
+        break
+      case 4:
+        setScale(18);
+        break;
+      case 5:
+        setScale(72);
+        break;
     }
   };
 
@@ -31,7 +99,7 @@ const Timeline = () => {
         zoomOut();
       }
     };
-  
+
     window.addEventListener("keydown", handleKeyDown);
   
     return () => {
@@ -39,9 +107,12 @@ const Timeline = () => {
     };
   }, [zoomIn, zoomOut]);
 
+  useEffect(() => {
+    updateScale();
+  }, [zoomMod]); // вызываем updateScale при изменении zoomMod
 
   function getItemReact(item) {
-    return {name: item.name, left: item.startTime * 300 * zoom, width: item.duration * 300 * zoom}    
+    return {name: item.name, left: item.startTime * widthLabels * scale, width: item.duration * widthLabels * scale}    
   }
 
   // Обработчик события прокрутки
@@ -55,19 +126,85 @@ const Timeline = () => {
     }
   };
 
-  // Генерация временных меток для панели времени
   const generateTimeLabels = () => {
     const labels = [];
-    for (let hour = 0; hour < 24; hour++) {
-      labels.push(
-        <div key={hour} className="hour-label" style={{ minWidth: `${300 * zoom}px`}}>
-          {hour}:00
-        </div>
-      );
+    switch (zoomMod) {
+      case 0:
+        // Режим 0: показываем только часы (0-23)
+        for (let hour = 0; hour < 24; hour++) {
+          labels.push(
+            <div key={hour} className="hour-label" style={{ minWidth: `${widthLabels * scale}px` }}>
+              {hour}:00
+            </div>
+          );
+        }
+        break;
+      case 1:
+        // Режим 1: показываем часы и промежутки по 30 минут между ними
+        for (let hour = 0; hour < 24; hour++) {
+          labels.push(
+            <div key={hour} className="hour-label" style={{ minWidth: `${widthLabels / 2 * scale}px` }}>
+              {hour}:00
+            </div>
+          );
+          labels.push(
+            <div key={`${hour}-30`} className="hour-label" style={{ minWidth: `${widthLabels / 2 * scale}px` }}>
+              {hour}:30
+            </div>
+          );
+        }
+        break;
+      case 2:
+        // Режим 2: показываем часы и промежутки по 15 минут между ними
+        for (let hour = 0; hour < 24; hour++) {
+          for (let minute = 0; minute < 60; minute += 15) {
+            labels.push(
+              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 4 * scale}px` }}>
+                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+              </div>
+            );
+          }
+        }
+        break;
+      case 3:
+        for (let hour = 0; hour < 24; hour++) {
+          for (let minute = 0; minute < 60; minute += 10) {
+            labels.push(
+              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 6 * scale}px` }}>
+                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+              </div>
+            );
+          }
+        }
+        break;
+
+      case 4:
+        for (let hour = 0; hour < 24; hour++) {
+          for (let minute = 0; minute < 60; minute += 5) {
+            labels.push(
+              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 12 * scale}px` }}>
+                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+              </div>
+            );
+          }
+        }
+        break;
+
+      case 5:
+        for (let hour = 0; hour < 24; hour++) {
+          for (let minute = 0; minute < 60; minute += 1) {
+            labels.push(
+              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 60 * scale}px` }}>
+                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+              </div>
+            );
+          }
+        }
+        break;
     }
     return labels;
   };
-
+  
   function generateItemLabels (items) {
     const itemsReact = [];
     
@@ -91,10 +228,16 @@ const Timeline = () => {
       
       // Создаём элемент React для текущего элемента
       const itemElement = (
-        <div key={currentItem.name} className="item" style={{ minWidth: `${itemWidth}px`, left: currentItem.left }}>
+        <div 
+          key={currentItem.name} 
+          className="item" 
+          style={{ minWidth: `${itemWidth}px`, left: currentItem.left}}
+          onMouseDown={(e) => handleMouseDown(e, currentItem)}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
           {currentItem.name}
-        </div>
-      );
+        </div>);
   
       itemsReact.push(itemElement); // Добавляем текущий элемент в список
   
