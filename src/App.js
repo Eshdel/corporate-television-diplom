@@ -1,8 +1,6 @@
 import React from "react";
 import "./App.css";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import Timeline from "./Timeline/Timeline";
-import DualScrollbar from "./DoubleScrollbar";
 
 function App() {
 
