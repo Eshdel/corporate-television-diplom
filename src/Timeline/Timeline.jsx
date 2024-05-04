@@ -13,7 +13,8 @@ const Timeline = () => {
 
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
-  
+  const [contentWidth, setContentWidth] = useState(0);
+
   const items = [
     { name: 'Item 1', startTime: '0', duration: '0.03125'},
     { name: 'Item 2', startTime: '1', duration: '1'},
@@ -208,30 +209,20 @@ const Timeline = () => {
   function generateItemLabels (items) {
     const itemsReact = [];
     
-    let prevItemRight = 0; // Переменная для хранения правой границы предыдущего элемента
-  
     for (let i = 0; i < items.length; i++) {
       const currentItem = getItemReact(items[i]);
       
       // Определяем ширину и левый отступ для текущего элемента
       const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
       const itemLeft = parseFloat(currentItem.left); // Преобразуем левый отступ в число
-  
-      // Проверяем, нужно ли добавить пустое пространство между предыдущим и текущим элементом
-      if (itemLeft > prevItemRight) {
-        const emptyWidth = itemLeft - prevItemRight; // Вычисляем ширину пустого пространства
-        const spaceItem = (
-          <div key={`spaceItem-${i}`} className="spaceItem" style={{ minWidth: `${emptyWidth}px`, backgroundColor: 'white' }}></div>
-        );
-        itemsReact.push(spaceItem); // Добавляем пустое пространство
-      }
+
       
       // Создаём элемент React для текущего элемента
       const itemElement = (
         <div 
           key={currentItem.name} 
           className="item" 
-          style={{ minWidth: `${itemWidth}px`, left: currentItem.left}}
+          style={{ minWidth: `${itemWidth}px`,  left: `${itemLeft}px`, position: "absolute"}}
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -241,19 +232,43 @@ const Timeline = () => {
   
       itemsReact.push(itemElement); // Добавляем текущий элемент в список
   
-      prevItemRight = itemLeft + itemWidth; // Обновляем правую границу предыдущего элемента
     }
   
-    if(timeLabelsRef.current && prevItemRight < timeLabelsRef.current.scrollWidth){
-      const emptyWidth = timeLabelsRef.current.scrollWidth - prevItemRight; // Вычисляем ширину пустого пространства
-      const spaceItem = (
-        <div key={`spaceItem-end`} className="spaceItem" style={{ minWidth: `${emptyWidth}px`, backgroundColor: 'black' }}></div>
-      );
-
-      itemsReact.push(spaceItem);
-    }
     return itemsReact;
   }
+
+  const updateContentWidth = () => {
+    if (timeLabelsRef.current) {
+      switch(zoomMod) {
+        case 0:
+          setContentWidth(3600);
+          break;
+        case 1:
+          setContentWidth(7200); // 30
+          break;
+        case 2:
+          setContentWidth(14400); // 15
+          break;
+        case 3:
+          setContentWidth(43200); // 10
+          break;
+        case 4:
+          setContentWidth(129600); // 5
+          break;
+        case 5:
+          setContentWidth(518400); // 1
+          break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    updateContentWidth();
+  }, [zoomMod]);
+
+  useEffect(() => {
+    updateContentWidth();
+  }, []);
 
   return (
     <div className="timeline-wrapper">
@@ -261,6 +276,7 @@ const Timeline = () => {
         className="time-labels-wrapper"
         onScroll={handleScroll}
         ref={timeLabelsRef}
+        style={{ width: `${contentWidth}px`}}
       >
         {generateTimeLabels()}
       </div>
@@ -268,6 +284,7 @@ const Timeline = () => {
         className="items-content-wrapper"
         onScroll={handleScroll}
         ref={itemsContentRef}
+        style={{ width: `${contentWidth}px`}}
       >
         {generateItemLabels(items)}
       </div>
