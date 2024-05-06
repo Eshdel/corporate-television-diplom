@@ -1,31 +1,30 @@
-.App {
+/* Стили для контейнера App */
+.container {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row; /* Располагаем элементы в строку */
+  align-items: flex-start; /* Выравниваем по верхнему краю */
+  padding: 20px; /* Добавим немного отступов */
+  overflow-x: auto; /* Включаем горизонтальный скролл */
 }
 
-.scroll-container {
-  display: flex;
-  height: 200px;
+/* Стили для дочернего элемента .list-item-holder */
+.list-item-holder {
+  width: 200px; /* Фиксированная ширина */
+  background-color: #f0f0f0; /* Цвет фона для наглядности */
+  padding: 10px; /* Добавим отступы внутри элемента */
+  margin-right: 20px; /* Отступ справа между элементами */
 }
 
-.scroll-bar {
-  overflow-x: auto;
-  overflow-y: hidden;
-  flex: 1;
-  white-space: nowrap;
+/* Стили для дочернего элемента .timeline-holder */
+.timeline-holder {
+  flex: 1; /* Займет все доступное пространство */
+  overflow-x: auto; /* Включаем горизонтальный скролл */
 }
 
-.hour,
-.appointment {
-  display: inline-block;
-  padding: 5px;
-  border: 1px solid #ccc;
-  margin-right: 5px;
-  position: absolute;
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.appointment {
-  background: lightblue;
+/* Стили для дочернего элемента .item-option-holder */
+.item-option-holder {
+  width: 200px; /* Фиксированная ширина */
+  background-color: #f0f0f0; /* Цвет фона для наглядности */
+  padding: 10px; /* Добавим отступы внутри элемента */
+  margin-left: 20px; /* Отступ слева между элементами */
 }

@@ -6,7 +6,7 @@
 
 .time-labels-wrapper  {
     display: flex;
-    grap:32px;
+    gap:0px;
      overflow-x: auto;
      scrollbar-color: transparent transparent;
      user-select: none;
@@ -14,7 +14,7 @@
 }
 .items-content-wrapper {
     display: flex;
-    grap:32px;
+    gap:0px;
     overflow-x: auto;
     scrollbar-color: transparent transparent;
     user-select: none;

@@ -16,9 +16,9 @@ const Timeline = () => {
   const [contentWidth, setContentWidth] = useState(0);
 
   const items = [
-    { name: 'Item 1', startTime: '0', duration: '0.03125'},
+    { name: 'Item 1', startTime: '0.5', duration: '0.03125'},
     { name: 'Item 2', startTime: '1', duration: '1'},
-    { name: 'Item 3', startTime: '2.1', duration: '2'}
+    { name: 'Item 3', startTime: '2.5', duration: '2'}
   ];
   
   const handleMouseDown = (e, item) => {
@@ -112,8 +112,14 @@ const Timeline = () => {
     updateScale();
   }, [zoomMod]); // вызываем updateScale при изменении zoomMod
 
-  function getItemReact(item) {
-    return {name: item.name, left: item.startTime * widthLabels * scale, width: item.duration * widthLabels * scale}    
+  function getItemReact(item, indexItem) {
+    let left = item.startTime * widthLabels * scale; 
+    
+    for(let i = 0; i < indexItem; i++) {
+      left -= items[i].duration * widthLabels * scale
+    }
+
+    return {name: item.name, left: left, width: item.duration * widthLabels * scale};    
   }
 
   // Обработчик события прокрутки
@@ -210,7 +216,7 @@ const Timeline = () => {
     const itemsReact = [];
     
     for (let i = 0; i < items.length; i++) {
-      const currentItem = getItemReact(items[i]);
+      const currentItem = getItemReact(items[i], i);
       
       // Определяем ширину и левый отступ для текущего элемента
       const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
@@ -222,12 +228,14 @@ const Timeline = () => {
         <div 
           key={currentItem.name} 
           className="item" 
-          style={{ minWidth: `${itemWidth}px`,  left: `${itemLeft}px`, position: "absolute"}}
+          style={{ minWidth: `${itemWidth}px`, height: `50px`,  left: `${itemLeft}px`
+          , position: "relative"
+        }
+        }
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {currentItem.name}
         </div>);
   
       itemsReact.push(itemElement); // Добавляем текущий элемент в список
