@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
-const Timeline = () => {
+const Timeline = ({ items, updateItemStartTime }) => {
   const widthLabels = 300;
 
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -10,17 +10,12 @@ const Timeline = () => {
   
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragStartPosition, setDragStartPosition] = useState(null);
+  const [newItemLeft,setItemLeft] = useState(null);
 
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
-
-  const items = [
-    { name: 'Item 1', startTime: '0.5', duration: '0.03125'},
-    { name: 'Item 2', startTime: '1', duration: '1'},
-    { name: 'Item 3', startTime: '2.5', duration: '2'}
-  ];
-  
+ 
   const handleMouseDown = (e, item) => {
     setDraggedItem(item);
     setDragStartPosition({
@@ -34,10 +29,23 @@ const Timeline = () => {
       const deltaX = e.clientX - dragStartPosition.x;
       const newLeft = dragStartPosition.left + deltaX;
       e.target.style.left = `${newLeft}px`;
+
+      // Вычисляем новое значение startTime
+      let left = newLeft;
+      const indexItem = items.findIndex(item => item.name === draggedItem.name);
+
+      for(let i = 0; i < indexItem; i++) {
+        left += items[i].duration * widthLabels * scale
+      }
+
+      setItemLeft(left / (widthLabels * scale));
     }
   };
 
   const handleMouseUp = () => {
+    // Обновляем startTime элемента в данных items
+    updateItemStartTime(draggedItem.name, newItemLeft);
+    setItemLeft(null);
     setDraggedItem(null);
     setDragStartPosition(null);
   };
