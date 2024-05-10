@@ -15,15 +15,16 @@ const Timeline = ({ items, updateItemStartTime }) => {
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
- 
+
   const handleMouseDown = (e, item) => {
     setDraggedItem(item);
+    setItemLeft(e.target.style.left);
     setDragStartPosition({
       x: e.clientX,
       left: parseFloat(e.target.style.left),
     });
   };
-
+  
   const handleMouseMove = (e) => {
     if (draggedItem) {
       const deltaX = e.clientX - dragStartPosition.x;
