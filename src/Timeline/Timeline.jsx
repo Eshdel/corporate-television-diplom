@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
-const Timeline = ({ items, updateItemStartTime }) => {
+const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
   const widthLabels = 300;
 
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -16,9 +16,12 @@ const Timeline = ({ items, updateItemStartTime }) => {
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
 
+  const handleItemClick = (item) => {
+    setSelectedItem(item); // Вызываем setSelectedItem с выбранным элементом
+  };
+
   const handleMouseDown = (e, item) => {
     setDraggedItem(item);
-    setItemLeft(e.target.style.left);
     setDragStartPosition({
       x: e.clientX,
       left: parseFloat(e.target.style.left),
@@ -45,7 +48,7 @@ const Timeline = ({ items, updateItemStartTime }) => {
 
   const handleMouseUp = () => {
     // Обновляем startTime элемента в данных items
-    updateItemStartTime(draggedItem.name, newItemLeft);
+    if(newItemLeft) updateItemStartTime(draggedItem.name, newItemLeft);
     setItemLeft(null);
     setDraggedItem(null);
     setDragStartPosition(null);
@@ -244,6 +247,7 @@ const Timeline = ({ items, updateItemStartTime }) => {
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onClick={() => handleItemClick(items[i])} // Добавляем обработчик клика
         >
         </div>);
   

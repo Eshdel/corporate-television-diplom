@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./App.css";
 import Timeline from "./Timeline/Timeline";
+import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 
 function App() {
   const [items, setItems] = useState([
@@ -8,6 +9,8 @@ function App() {
     { name: 'Item 2', startTime: '1', duration: '1'},
     { name: 'Item 3', startTime: '3', duration: '2'}
   ]);
+
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Функция для обновления данных items
   const updateItemStartTime = (itemName, newStartTime) => {
@@ -21,9 +24,10 @@ function App() {
       <div className="list-item-holder">
       </div>
       <div className="timeline-holder">
-        <Timeline items={items} updateItemStartTime={updateItemStartTime}></Timeline>
+        <Timeline items={items} updateItemStartTime={updateItemStartTime}  setSelectedItem={setSelectedItem}></Timeline>
       </div>
-      <div className="item-option-holder"></div>
+      {/* Условный рендеринг для отображения ItemOptionHolder */}
+      {selectedItem && <ItemOptionHolder selectedItem={selectedItem} />}
     </div>
   );
 }
