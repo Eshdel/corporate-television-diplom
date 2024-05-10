@@ -10,7 +10,7 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
   
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragStartPosition, setDragStartPosition] = useState(null);
-  const [newItemLeft,setItemLeft] = useState(null);
+  const [itemStartTime,setItemStartTime] = useState(null);
 
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
@@ -42,14 +42,14 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
         left += items[i].duration * widthLabels * scale
       }
 
-      setItemLeft(left / (widthLabels * scale));
+      setItemStartTime(left / (widthLabels * scale));
     }
   };
 
   const handleMouseUp = () => {
     // Обновляем startTime элемента в данных items
-    if(newItemLeft) updateItemStartTime(draggedItem.name, newItemLeft);
-    setItemLeft(null);
+    if(itemStartTime) updateItemStartTime(draggedItem.name, itemStartTime);
+    setItemStartTime(null);
     setDraggedItem(null);
     setDragStartPosition(null);
   };
