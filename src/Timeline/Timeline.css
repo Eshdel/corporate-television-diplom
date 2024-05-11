@@ -10,7 +10,8 @@
      overflow-x: auto;
      scrollbar-color: transparent transparent;
      user-select: none;
-     background-color: blue;
+     background-color: #fff;
+     padding-bottom: 10px;
 }
 .items-content-wrapper {
     display: flex;
@@ -18,7 +19,7 @@
     overflow-x: auto;
     scrollbar-color: transparent transparent;
     user-select: none;
-    background-color: red;
+    background-color: transparent;
 }
 
 .time-labels-wrapper::-webkit-scrollbar{}
@@ -29,15 +30,7 @@
 }
 
 .item{
-    background-color: blueviolet;
-}
-
-.Useless {
-    width: 100%;
-    display: flex;
-    grap:32px;
-    overflow-x: auto;
-    scrollbar-color: transparent transparent;
-    user-select: none;
-    background-color: red;
+    background-color: #512da8;
+    background: linear-gradient(to right, #5c6bc0, #512da8);
+    border-radius: 20px;
 }

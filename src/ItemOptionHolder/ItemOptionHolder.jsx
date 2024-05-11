@@ -51,8 +51,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime }) => {
 
   return (
     <div className="item-option-holder">
-      <h2>Selected Item Options</h2>
-      <p>Name: {selectedItem.name}</p>
+      <h2>{selectedItem.name}</h2>
       {/* Поле для редактирования startTime */}
       <p>
         Start Time:{" "}

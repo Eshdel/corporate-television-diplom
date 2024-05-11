@@ -22,6 +22,14 @@ function App() {
   return (
     <div className="container">
       <div className="list-item-holder">
+        <button className="upload-button">Upload file</button>
+        <button className="save-button">Save</button>
+        {items.map((item, index) => (
+          <div className="list-item" key={index}>
+            <p>{item.name}</p>
+            <p>{item.type}</p>
+          </div>
+        ))}
       </div>
       <div className="timeline-holder">
         <Timeline items={items} updateItemStartTime={updateItemStartTime}  setSelectedItem={setSelectedItem}></Timeline>

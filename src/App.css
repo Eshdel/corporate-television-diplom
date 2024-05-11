@@ -9,16 +9,24 @@
 
 /* Стили для дочернего элемента .list-item-holder */
 .list-item-holder {
-  width: 200px; /* Фиксированная ширина */
-  background-color: #f0f0f0; /* Цвет фона для наглядности */
-  padding: 10px; /* Добавим отступы внутри элемента */
-  margin-right: 20px; /* Отступ справа между элементами */
+  flex-direction: column;
+  display: flex;
+  width: 200px;
+  height: 95vh;
+  margin-right: 20px; 
+  background-color: #fff;
+  border-radius: 30px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+  padding: 10px;
 }
 
 /* Стили для дочернего элемента .timeline-holder */
 .timeline-holder {
   flex: 1; /* Займет все доступное пространство */
   overflow-x: auto; /* Включаем горизонтальный скролл */
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 10px;
 }
 
 /* Стили для дочернего элемента .item-option-holder */
@@ -27,4 +35,38 @@
   background-color: #f0f0f0; /* Цвет фона для наглядности */
   padding: 10px; /* Добавим отступы внутри элемента */
   margin-left: 20px; /* Отступ слева между элементами */
+}
+.list-item {
+  width: 100%;
+  border-color: #512da8; /* задаем цвет фона */
+  border-radius: 8px; /* закругляем углы элемента списка */
+  margin-bottom: 10px;
+}
+
+.save-button{
+  background-color: #512da8;
+  color: #fff;
+  font-size: 12px;
+  padding: 10px 45px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+ .upload-button{
+  background-color: transparent;
+  color: #512da8;
+  font-size: 12px;
+  padding: 10px 45px;
+  border: 1px solid #512da8;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 10px;
+  cursor: pointer;
 }

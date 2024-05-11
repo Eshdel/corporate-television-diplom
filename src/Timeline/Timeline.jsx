@@ -240,10 +240,7 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
         <div 
           key={currentItem.name} 
           className="item" 
-          style={{ minWidth: `${itemWidth}px`, height: `50px`,  left: `${itemLeft}px`
-          , position: "relative"
-        }
-        }
+          style={{overflow: 'hidden', minWidth: `${itemWidth}px`, height: `91vh`,  left: `${itemLeft}px`, position: "relative"}}
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
