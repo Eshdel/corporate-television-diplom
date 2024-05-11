@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/corporate-television-diplom/static/css/main.277c2496.css",
+    "main.js": "/corporate-television-diplom/static/js/main.951bdd55.js",
+    "static/js/453.2471f61e.chunk.js": "/corporate-television-diplom/static/js/453.2471f61e.chunk.js",
+    "index.html": "/corporate-television-diplom/index.html",
+    "main.277c2496.css.map": "/corporate-television-diplom/static/css/main.277c2496.css.map",
+    "main.951bdd55.js.map": "/corporate-television-diplom/static/js/main.951bdd55.js.map",
+    "453.2471f61e.chunk.js.map": "/corporate-television-diplom/static/js/453.2471f61e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.277c2496.css",
+    "static/js/main.951bdd55.js"
+  ]
+}
