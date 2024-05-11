@@ -24,9 +24,6 @@ function App() {
       <div className="list-item-holder">
       </div>
       <div className="timeline-holder">
-        <button>
-          Text
-        </button>
         <Timeline items={items} updateItemStartTime={updateItemStartTime}  setSelectedItem={setSelectedItem}></Timeline>
       </div>
       {/* Условный рендеринг для отображения ItemOptionHolder */}
