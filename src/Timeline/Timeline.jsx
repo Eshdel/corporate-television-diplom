@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
-const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
+const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedItem}) => {
   const widthLabels = 300;
 
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -9,9 +9,11 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
   const itemsContentRef = useRef(null);
   
   const [draggedItem, setDraggedItem] = useState(null);
+  const [draggedElement, setDraggedElement] = useState(null);
   const [dragStartPosition, setDragStartPosition] = useState(null);
-  const [itemStartTime,setItemStartTime] = useState(null);
 
+  const [itemStartTime,setItemStartTime] = useState(null);
+  
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
@@ -22,24 +24,30 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
 
   const handleMouseDown = (e, item) => {
     setDraggedItem(item);
+    setDraggedElement(e);
     setDragStartPosition({
       x: e.clientX,
+      y: e.clientY,
       left: parseFloat(e.target.style.left),
+      top: parseFloat(e.target.style.top)
     });
   };
   
   const handleMouseMove = (e) => {
     if (draggedItem) {
       const deltaX = e.clientX - dragStartPosition.x;
+      const deltaY = e.clientY - dragStartPosition.y;
       const newLeft = dragStartPosition.left + deltaX;
-      e.target.style.left = `${newLeft}px`;
+      const newTop = dragStartPosition.top + deltaY;
+      draggedElement.target.style.top = `${newTop}px`;
+      draggedElement.target.style.left = `${newLeft}px`;
 
       // Вычисляем новое значение startTime
       let left = newLeft;
       const indexItem = items.findIndex(item => item.name === draggedItem.name);
 
       for(let i = 0; i < indexItem; i++) {
-        left += items[i].duration * widthLabels * scale
+        left += items[i].duration * widthLabels * scale;
       }
 
       setItemStartTime(left / (widthLabels * scale));
@@ -48,7 +56,22 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
 
   const handleMouseUp = () => {
     // Обновляем startTime элемента в данных items
-    if(itemStartTime) updateItemStartTime(draggedItem.name, itemStartTime);
+    if(itemStartTime) {
+      updateItemStartTime(draggedItem.name, itemStartTime);
+    }
+
+    if(draggedItem)  {
+      const parentHeight = draggedElement.target.parentNode.clientHeight;
+      const elementHeight = draggedElement.target.clientHeight;
+      const level = Math.min(4, Math.max(1, Math.ceil((draggedElement.target.offsetTop + elementHeight / 2) / (parentHeight / 4))));
+      const newTop = (level - 1) * (parentHeight / 4);
+
+      draggedElement.target.style.top = `${newTop}px`;
+
+      updateItemPriority(draggedItem.name, level);
+    }
+    
+    setDraggedElement(null);
     setItemStartTime(null);
     setDraggedItem(null);
     setDragStartPosition(null);
@@ -57,6 +80,8 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
   useEffect(() => {
     const handleMouseUpOutside = () => {
       if (draggedItem) {
+        setDraggedElement(null);
+        setItemStartTime(null);
         setDraggedItem(null);
         setDragStartPosition(null);
       }
@@ -130,8 +155,13 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
     for(let i = 0; i < indexItem; i++) {
       left -= items[i].duration * widthLabels * scale
     }
+    let newTop = 0;
 
-    return {name: item.name, left: left, width: item.duration * widthLabels * scale};    
+    if(itemsContentRef && itemsContentRef.current) {
+      newTop = (item.priority - 1) * (1188.7 / 4);
+    }
+    
+    return {name: item.name, left: left, top: newTop, width: item.duration * widthLabels * scale};    
   }
 
   // Обработчик события прокрутки
@@ -233,19 +263,19 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
       // Определяем ширину и левый отступ для текущего элемента
       const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
       const itemLeft = parseFloat(currentItem.left); // Преобразуем левый отступ в число
-
-      
+      const itemTop = parseFloat(currentItem.top);
       // Создаём элемент React для текущего элемента
       const itemElement = (
         <div 
           key={currentItem.name} 
           className="item" 
-          style={{overflow: 'hidden', minWidth: `${itemWidth}px`, height: `91vh`,  left: `${itemLeft}px`, position: "relative"}}
+          style={{overflow: 'hidden', minWidth: `${itemWidth}px`, height: `20%`,  left: `${itemLeft}px`, top:`${itemTop}px`, position: "relative"}}
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
           onClick={() => handleItemClick(items[i])} // Добавляем обработчик клика
         >
+          <div style={{color:"white",textAlign: "center"}}>
+            {currentItem.name}
+          </div>
         </div>);
   
       itemsReact.push(itemElement); // Добавляем текущий элемент в список
@@ -302,6 +332,8 @@ const Timeline = ({ items, updateItemStartTime, setSelectedItem}) => {
         className="items-content-wrapper"
         onScroll={handleScroll}
         ref={itemsContentRef}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
         style={{ width: `${contentWidth}px`}}
       >
         {generateItemLabels(items)}

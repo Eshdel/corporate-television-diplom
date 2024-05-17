@@ -38,7 +38,7 @@
 }
 .list-item {
   width: 100%;
-  border-color: #512da8; /* задаем цвет фона */
+  border: 1px solid  #512da8; /* задаем цвет фона */
   border-radius: 8px; /* закругляем углы элемента списка */
   margin-bottom: 10px;
 }
@@ -54,6 +54,7 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-top: 10px;
+  margin-bottom: 10px;
   cursor: pointer;
 }
 
