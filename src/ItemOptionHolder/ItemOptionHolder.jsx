@@ -66,6 +66,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime }) => {
       {!validTime && <p className="error-message">Please enter a valid time in the format HH:MM:SS</p>}
       <p>Duration: {selectedItem.duration}</p>
       <p>Priority: {selectedItem.priority}</p>
+      <p>Id: {selectedItem.id}</p>
     </div>
   );
 };

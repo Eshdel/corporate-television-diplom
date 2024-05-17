@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
-const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedItem}) => {
+const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedItem, handleDrop, leftPanelItemDrag}) => {
   const widthLabels = 300;
 
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -11,12 +11,19 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedElement, setDraggedElement] = useState(null);
   const [dragStartPosition, setDragStartPosition] = useState(null);
-
-  const [itemStartTime,setItemStartTime] = useState(null);
+  const [draggedItemStartTime,setDraggedItemStartTime] = useState(null);
   
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
+
+  const getCurrentTime = () => {
+    const currentTime = new Date();
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    return hours + (minutes / 60); // Возвращает текущее время в часах с учетом минут
+  };
+  
 
   const handleItemClick = (item) => {
     setSelectedItem(item); // Вызываем setSelectedItem с выбранным элементом
@@ -44,20 +51,30 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
 
       // Вычисляем новое значение startTime
       let left = newLeft;
-      const indexItem = items.findIndex(item => item.name === draggedItem.name);
+      const indexItem = items.findIndex(item => item.id === draggedItem.id);
 
       for(let i = 0; i < indexItem; i++) {
         left += items[i].duration * widthLabels * scale;
       }
 
-      setItemStartTime(left / (widthLabels * scale));
+      setDraggedItemStartTime(left / (widthLabels * scale));
     }
+
+    if(leftPanelItemDrag) {
+      let left = e.clientX;
+
+      for(let i = 0; i < items.length; i++) {
+        left += items[i].duration * widthLabels * scale;
+      }
+      setDraggedItemStartTime(left / (widthLabels * scale));
+    }
+    
   };
 
   const handleMouseUp = () => {
     // Обновляем startTime элемента в данных items
-    if(itemStartTime) {
-      updateItemStartTime(draggedItem.name, itemStartTime);
+    if(draggedItem && draggedItemStartTime) {
+      updateItemStartTime(draggedItem.id, draggedItemStartTime);
     }
 
     if(draggedItem)  {
@@ -68,11 +85,11 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
 
       draggedElement.target.style.top = `${newTop}px`;
 
-      updateItemPriority(draggedItem.name, level);
+      updateItemPriority(draggedItem.id, level);
     }
     
     setDraggedElement(null);
-    setItemStartTime(null);
+    setDraggedItemStartTime(null);
     setDraggedItem(null);
     setDragStartPosition(null);
   };
@@ -81,7 +98,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
     const handleMouseUpOutside = () => {
       if (draggedItem) {
         setDraggedElement(null);
-        setItemStartTime(null);
+        setDraggedItemStartTime(null);
         setDraggedItem(null);
         setDragStartPosition(null);
       }
@@ -161,7 +178,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
       newTop = (item.priority - 1) * (1188.7 / 4);
     }
     
-    return {name: item.name, left: left, top: newTop, width: item.duration * widthLabels * scale};    
+    return { id: item.id, name: item.name, left: left, top: newTop, width: item.duration * widthLabels * scale};    
   }
 
   // Обработчик события прокрутки
@@ -253,7 +270,11 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
     }
     return labels;
   };
-  
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
   function generateItemLabels (items) {
     const itemsReact = [];
     
@@ -261,13 +282,14 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
       const currentItem = getItemReact(items[i], i);
       
       // Определяем ширину и левый отступ для текущего элемента
+
       const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
       const itemLeft = parseFloat(currentItem.left); // Преобразуем левый отступ в число
       const itemTop = parseFloat(currentItem.top);
       // Создаём элемент React для текущего элемента
       const itemElement = (
         <div 
-          key={currentItem.name} 
+          key={currentItem.id} 
           className="item" 
           style={{overflow: 'hidden', minWidth: `${itemWidth}px`, height: `20%`,  left: `${itemLeft}px`, top:`${itemTop}px`, position: "relative"}}
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
@@ -319,7 +341,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   }, []);
 
   return (
-    <div className="timeline-wrapper">
+    <div className="timeline-wrapper"  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, getCurrentTime())}>
       <div
         className="time-labels-wrapper"
         onScroll={handleScroll}
