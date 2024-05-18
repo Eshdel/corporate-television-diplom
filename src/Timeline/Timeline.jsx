@@ -340,6 +340,18 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
     updateContentWidth();
   }, []);
 
+  useEffect(() => {
+    const scrollToCurrentTime = () => {
+      const currentTime = getCurrentTime();
+      const currentPosition = currentTime * widthLabels * scale;
+      if (timeLabelsRef.current && itemsContentRef.current) {
+        timeLabelsRef.current.scrollLeft = currentPosition;
+        itemsContentRef.current.scrollLeft = currentPosition;
+      }
+    };
+    scrollToCurrentTime();
+  }, []); // Empty dependency array ensures this effect runs only once on mount
+
   return (
     <div className="timeline-wrapper"  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, getCurrentTime())}>
       <div

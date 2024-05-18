@@ -6,39 +6,13 @@ import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 function App() {
   const [draggedItem, setDraggedItem] = useState(null); // Хранение данных о перетаскиваемом элементе
 
-  const [items,setItems] = useState([
-    {
-      name: 'Image №1',
-      duration: 1,
-      type: "image"
-    },
-    {
-      name: 'Video №2',
-      duration: 1,
-      type: "video"
-    },
-    {
-      name: 'Presentation №3',
-      duration: 1,
-      type: "presentation"
-    },
-    {
-      name: 'Presentation №4',
-      duration: 1,
-      type: "presentation"
-    }
-  ]);
+  const [items,setItems] = useState([]);
 
-  const [elementsOnTimeline, setElementsOnTimeline] = useState([
-    {id: 0, name: 'Image №1', startTime: 0.25, duration: 0.5, priority: 1, type: "image"},
-    {id: 1, name: 'Video №2', startTime: 1, duration: 1, priority: 2, type: "video"},
-    {id: 2, name: 'Presentation №3', startTime: 3, duration: 2, priority: 3, type: "presentation"},
-    {id: 3, name: 'Presentation №4', startTime: 4, duration: 1, priority: 4, type: "presentation"}
-  ]);
+  const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
 
   const [selectedItem, setSelectedItem] = useState(null);
 
-  
+  const fileInputRef = useRef(null);
   // Обработчик начала перетаскивания элемента
   const handleDragStart = (e, item) => {
     setDraggedItem(item); // Сохраняем данные о перетаскиваемом элементе
@@ -80,12 +54,53 @@ function App() {
     ));
   };
   
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    processFiles(files);
+  };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    processFiles(files);
+  };
+
+  const processFiles = (files) => {
+    const newItems = files.map(file => {
+      let type;
+      if (file.type.startsWith('image/')) {
+        type = 'image';
+      } else if (file.type.startsWith('video/')) {
+        type = 'video';
+      } else if (file.type === 'application/pdf') {
+        type = 'presentation';
+      } else {
+        return null;
+      }
+      return {
+        name: file.name,
+        duration: 1,
+        type: type
+      };
+    }).filter(item => item !== null);
+    setItems(prevItems => [...prevItems, ...newItems]);
+  };
+  
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
 
   return (
     <div className="container">
-      <div className="list-item-holder">
-        <button className="upload-button">Upload file</button>
+      <div className="list-item-holder" onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()}>
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          multiple
+          onChange={handleFileChange}
+        />
+        <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
         <button className="save-button">Save</button>
         {items.map((item, index) => (
           <div 
