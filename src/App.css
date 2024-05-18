@@ -11,7 +11,7 @@
 .list-item-holder {
   flex-direction: column;
   display: flex;
-  width: 200px;
+  width: 350px;
   height: 95vh;
   margin-right: 20px; 
   background-color: #fff;
@@ -31,7 +31,7 @@
 
 /* Стили для дочернего элемента .item-option-holder */
 .item-option-holder {
-  width: 200px; /* Фиксированная ширина */
+  width: 300px; /* Фиксированная ширина */
   background-color: #f0f0f0; /* Цвет фона для наглядности */
   padding: 10px; /* Добавим отступы внутри элемента */
   margin-left: 20px; /* Отступ слева между элементами */
@@ -70,4 +70,28 @@
   text-transform: uppercase;
   margin-top: 10px;
   cursor: pointer;
+}
+
+.delete-button {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-dialog button {
+  margin: 5px;
 }
