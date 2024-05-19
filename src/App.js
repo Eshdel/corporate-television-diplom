@@ -1,18 +1,27 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./App.css";
 import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
+import DatePicker from "./DatePicker/DatePicker";  // Импортируем новый компонент
 
 function App() {
   const [draggedItem, setDraggedItem] = useState(null);
   const [items, setItems] = useState([]);
+  const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]); // Список всех элементов на временной шкале
   const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 10)); // Добавляем состояние для выбранной даты
   const [selectedItem, setSelectedItem] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showTrashBin, setShowTrashBin] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // Фильтруем элементы на временной шкале по выбранной дате
+    const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
+    setElementsOnTimeline(filteredElements);
+  }, [selectedDate, allElementsOnTimeline]);
 
   const handleDragStart = (e, item) => {
     setDraggedItem(item);
@@ -33,27 +42,28 @@ function App() {
         startTime: startTime,
         duration: draggedItem.duration,
         priority: 1,
-        type: draggedItem.type
+        type: draggedItem.type,
+        startDate: selectedDate // Добавляем выбранную дату к новому элементу
       };
-      setElementsOnTimeline(prevItems => [...prevItems, newItem]);
+      setAllElementsOnTimeline(prevItems => [...prevItems, newItem]);
       setShowTrashBin(false);
     }
   };
 
   const updateItemStartTime = (itemId, newStartTime) => {
-    setElementsOnTimeline(prevItems => prevItems.map(item => 
+    setAllElementsOnTimeline(prevItems => prevItems.map(item => 
       item.id === itemId ? { ...item, startTime: newStartTime } : item
     ));
   };
 
   const updateItemPriority = (itemId, newPriority) => {
-    setElementsOnTimeline(prevItems => prevItems.map(item => 
+    setAllElementsOnTimeline(prevItems => prevItems.map(item => 
       item.id === itemId ? { ...item, priority: newPriority } : item
     ));
   };
 
   const deleteItemFromTimeline = (itemId) => {
-    setElementsOnTimeline(prevItems => prevItems.filter(item => item.id !== itemId));
+    setAllElementsOnTimeline(prevItems => prevItems.filter(item => item.id !== itemId));
     setSelectedItem(null);
   };
 
@@ -131,6 +141,7 @@ function App() {
           multiple
           onChange={handleFileChange}
         />
+        <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
         <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
         <button className="save-button">Save</button>
         {items.map((item, index) => (
@@ -147,6 +158,7 @@ function App() {
         ))}
         <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
+      
       <div className="timeline-holder">
         <Timeline 
           items={elementsOnTimeline} 
