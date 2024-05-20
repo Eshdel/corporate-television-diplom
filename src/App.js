@@ -4,6 +4,7 @@ import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
+import { getListOfMediaFiles, uploadMediaFile } from "./Api";
 
 function App() {
   const [draggedItem, setDraggedItem] = useState(null);
@@ -16,6 +17,29 @@ function App() {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showTrashBin, setShowTrashBin] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    getListOfMediaFiles()
+      .then(data => {
+        console.log('Media files:', data);
+        
+        // Transform the data to match the format expected by processFiles
+        const transformedData = data.map(file => {
+          return {
+            id: Math.floor(Math.random() * 2147483647),
+            type: file.file_type,
+            name: `${file.file_name}.${file.file_format}`,
+            duration: file.seconds/3600 || 1, // Default to 1 if seconds is undefined
+          };
+        });
+  
+        // Call processFiles with the transformed data
+        setItems(transformedData);
+      })
+      .catch(error => {
+        console.error('Error while fetching media files:', error.message);
+      });
+  }, []); // Run only once when the component mounts
 
   useEffect(() => {
     const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
@@ -196,6 +220,7 @@ function App() {
         />
         <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
         <button className="save-button">Save</button>
+        <div className="scrollable-list">
         {items.map((item, index) => (
           <div 
             className="list-item" 
@@ -208,6 +233,7 @@ function App() {
             <p style={{marginLeft:" 8px"}}>Type: {item.type}</p>
           </div>
         ))}
+        </div>
         <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
       

@@ -9,15 +9,39 @@
 
 /* Стили для дочернего элемента .list-item-holder */
 .list-item-holder {
-  flex-direction: column;
   display: flex;
+  flex-direction: column;
   width: 350px;
   height: 95vh;
-  margin-right: 20px; 
+  margin-right: 20px;
   background-color: #fff;
   border-radius: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
   padding: 10px;
+  overflow: hidden; /* Убираем горизонтальную прокрутку */
+}
+.scrollable-list {
+  flex: 1; /* Займёт доступное пространство */
+  overflow-y: auto; /* Включаем вертикальную прокрутку */
+  overflow-x: hidden;
+}
+/* Стили для скроллбара */
+.scrollable-list::-webkit-scrollbar {
+  width: 8px; /* Ширина скроллбара */
+}
+
+.scrollable-list::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Цвет трека */
+  border-radius: 10px; /* Закругленные углы */
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+  background: #888; /* Цвет ползунка */
+  border-radius: 10px; /* Закругленные углы */
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Цвет ползунка при наведении */
 }
 
 /* Стили для дочернего элемента .timeline-holder */
@@ -37,7 +61,7 @@
   margin-left: 20px; /* Отступ слева между элементами */
 }
 .list-item {
-  width: 100%;
+  width: 95%;
   border: 1px solid  #512da8; /* задаем цвет фона */
   border-radius: 8px; /* закругляем углы элемента списка */
   margin-bottom: 10px;
