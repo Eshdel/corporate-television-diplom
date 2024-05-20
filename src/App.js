@@ -4,7 +4,7 @@ import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
-import { getListOfMediaFiles, uploadMediaFile } from "./Api";
+import { getListOfMediaFiles, uploadMediaFile, convertToVideo } from "./Api";
 
 function App() {
   const [draggedItem, setDraggedItem] = useState(null);
@@ -29,7 +29,7 @@ function App() {
             id: Math.floor(Math.random() * 2147483647),
             type: file.file_type,
             name: `${file.file_name}.${file.file_format}`,
-            duration: file.seconds/3600 || 1, // Default to 1 if seconds is undefined
+            duration: file.seconds/3600 , // Default to 1 if seconds is undefined
           };
         });
   
@@ -56,14 +56,15 @@ function App() {
     setShowTrashBin(false);
   };
 
-  const handleDropOnTimeline = (e, startTime) => {
+  const handleDropOnTimeline = async (e, startTime) => {
     e.preventDefault();
+
     if (draggedItem) {
       const newItem = {
         id: Math.floor(Math.random() * 2147483647),
         name: draggedItem.name,
         startTime: startTime,
-        duration: draggedItem.duration,
+        duration: draggedItem.duration || 1,
         priority: 1,
         type: draggedItem.type,
         startDate: selectedDate
