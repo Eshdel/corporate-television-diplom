@@ -3,14 +3,14 @@ import "./App.css";
 import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
-import DatePicker from "./DatePicker/DatePicker";  // Импортируем новый компонент
+import DatePicker from "./DatePicker/DatePicker";
 
 function App() {
   const [draggedItem, setDraggedItem] = useState(null);
   const [items, setItems] = useState([]);
-  const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]); // Список всех элементов на временной шкале
+  const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]);
   const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 10)); // Добавляем состояние для выбранной даты
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 10));
   const [selectedItem, setSelectedItem] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -18,7 +18,6 @@ function App() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Фильтруем элементы на временной шкале по выбранной дате
     const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
     setElementsOnTimeline(filteredElements);
   }, [selectedDate, allElementsOnTimeline]);
@@ -43,7 +42,7 @@ function App() {
         duration: draggedItem.duration,
         priority: 1,
         type: draggedItem.type,
-        startDate: selectedDate // Добавляем выбранную дату к новому элементу
+        startDate: selectedDate
       };
       setAllElementsOnTimeline(prevItems => [...prevItems, newItem]);
       setShowTrashBin(false);
@@ -131,6 +130,53 @@ function App() {
     fileInputRef.current.click();
   };
 
+  const addRepeatingItems = (item, frequency, untilDate, repeatDays, repeatWeeks, repeatMonths) => {
+    const until = new Date(untilDate);
+    let currentDate = new Date(selectedDate);
+  
+    // Remove existing repeating items
+    setAllElementsOnTimeline(prevItems => prevItems.filter(i => i.originalId !== item.id));
+  
+    const newItems = [];
+  
+    while (currentDate <= until) {
+      if (frequency === 'daily') {
+        if (repeatDays[currentDate.getDay()] && currentDate.toISOString().substring(0, 10) !== item.startDate) {
+          newItems.push({
+            ...item,
+            id: Math.random(),
+            startDate: currentDate.toISOString().substring(0, 10),
+            originalId: item.id
+          });
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (frequency === 'weekly') {
+        if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
+          newItems.push({
+            ...item,
+            id: Math.random(),
+            startDate: currentDate.toISOString().substring(0, 10),
+            originalId: item.id
+          });
+        }
+        currentDate.setDate(currentDate.getDate() + (7 * repeatWeeks));
+      } else if (frequency === 'monthly') {
+        if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
+          newItems.push({
+            ...item,
+            id: Math.random(),
+            startDate: currentDate.toISOString().substring(0, 10),
+            originalId: item.id
+          });
+        }
+        currentDate.setMonth(currentDate.getMonth() + repeatMonths);
+      }
+    }
+  
+    setAllElementsOnTimeline(prevItems => [...prevItems, ...newItems]);
+  };
+  
+
   return (
     <div className="container">
       <div className="list-item-holder" onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} style={{ position: 'relative' }}>
@@ -141,7 +187,6 @@ function App() {
           multiple
           onChange={handleFileChange}
         />
-        <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
         <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
         <button className="save-button">Save</button>
         {items.map((item, index) => (
@@ -158,7 +203,7 @@ function App() {
         ))}
         <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
-      
+      <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
       <div className="timeline-holder">
         <Timeline 
           items={elementsOnTimeline} 
@@ -168,7 +213,14 @@ function App() {
           handleDrop={handleDropOnTimeline}
         />
       </div>
-      {selectedItem && <ItemOptionHolder selectedItem={selectedItem} updateStartTime={updateItemStartTime} deleteItem={deleteItemFromTimeline} />}
+      {selectedItem && (
+        <ItemOptionHolder 
+          selectedItem={selectedItem} 
+          updateStartTime={updateItemStartTime} 
+          deleteItem={deleteItemFromTimeline} 
+          addRepeatingItems={addRepeatingItems} 
+        />
+      )}
       {showConfirm && (
         <div className="confirm-dialog">
           <p>Are you sure you want to delete this item?</p>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./ItemOptionHolder.css";
 
-const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem }) => {
+const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeatingItems }) => {
   const formatTime = (time) => {
     const hours = Math.floor(time);
     const minutes = Math.floor((time - hours) * 60);
@@ -12,6 +12,11 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem }) => {
   const [editedStartTime, setEditedStartTime] = useState(formatTime(selectedItem.startTime));
   const [validTime, setValidTime] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [frequency, setFrequency] = useState('none');
+  const [untilDate, setUntilDate] = useState();
+  const [repeatDays, setRepeatDays] = useState(Array(7).fill(true)); // All days selected by default
+  const [repeatWeeks, setRepeatWeeks] = useState(1);
+  const [repeatMonths, setRepeatMonths] = useState(1);
 
   useEffect(() => {
     setEditedStartTime(formatTime(selectedItem.startTime));
@@ -54,6 +59,16 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem }) => {
     setShowConfirm(false);
   };
 
+  const handleRepeatDaysChange = (dayIndex) => {
+    const newRepeatDays = [...repeatDays];
+    newRepeatDays[dayIndex] = !newRepeatDays[dayIndex];
+    setRepeatDays(newRepeatDays);
+  };
+
+  const handleAddRepeatingItems = () => {
+    addRepeatingItems(selectedItem, frequency, untilDate, repeatDays, repeatWeeks, repeatMonths);
+  };
+
   return (
     <div className="item-option-holder">
       <h2>{selectedItem.name}</h2>
@@ -80,6 +95,82 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem }) => {
           <button onClick={cancelDelete}>No</button>
         </div>
       )}
+
+      <div className="repeat-options">
+        <h3>Repeat Options</h3>
+        <div>
+          <label>
+            Frequency:
+            <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Until:
+            <input
+              type="date"
+              value={untilDate}
+              onChange={(e) => setUntilDate(e.target.value)}
+            />
+          </label>
+        </div>
+
+        {frequency === 'daily' && (
+          <div>
+            <label>Repeat on:</label>
+            <div className="repeat-days">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    checked={repeatDays[index]}
+                    onChange={() => handleRepeatDaysChange(index)}
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {frequency === 'weekly' && (
+          <div>
+            <label>
+              Repeat every:
+              <input
+                type="number"
+                min="1"
+                max="4"
+                value={repeatWeeks}
+                onChange={(e) => setRepeatWeeks(parseInt(e.target.value))}
+              /> weeks
+            </label>
+          </div>
+        )}
+
+        {frequency === 'monthly' && (
+          <div>
+            <label>
+              Repeat every:
+              <input
+                type="number"
+                min="1"
+                max="12"
+                value={repeatMonths}
+                onChange={(e) => setRepeatMonths(parseInt(e.target.value))}
+              /> months
+            </label>
+          </div>
+        )}
+
+        <button onClick={handleAddRepeatingItems}>Add Repeats</button>
+      </div>
     </div>
   );
 };
