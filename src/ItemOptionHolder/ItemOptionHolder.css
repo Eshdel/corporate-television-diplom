@@ -1,31 +1,124 @@
-.item-option-holder{
-    height: 95vh;
-    background-color: #fff;
-    border-radius: 30px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+/* ItemOptionHolder.css */
+.item-option-holder {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  width: 300px;
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input.invalid-time,
+input.invalid-duration {
+  border-color: red;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9em;
+}
+
+.item-details {
+  margin-bottom: 20px;
 }
 
 .delete-button {
-    background-color: red;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  
-  .confirm-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .confirm-dialog button {
-    margin: 5px;
-  }
-  
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+.confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.confirm-dialog button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.confirm-dialog button:first-child {
+  background-color: #3498db;
+  color: white;
+}
+
+.confirm-dialog button:last-child {
+  background-color: #bdc3c7;
+  color: #333;
+}
+
+.repeat-options {
+  margin-top: 20px;
+}
+
+.repeat-days {
+  margin-top: 10px;
+}
+
+.repeat-days-checkboxes {
+  display: flex;
+  justify-content: space-between;
+}
+
+.repeat-day {
+  display: flex;
+  align-items: center;
+}
+
+.add-repeat-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.add-repeat-button:hover {
+  background-color: #27ae60;
+}

@@ -90,8 +90,8 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
   return (
     <div className="item-option-holder">
       <h2>{selectedItem.name}</h2>
-      <p>
-        Start Time:{" "}
+      <div className="input-group">
+        <label>Start Time:</label>
         <input
           type="text"
           value={editedStartTime}
@@ -99,20 +99,22 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
           onBlur={handleBlur}
           className={!validTime ? 'invalid-time' : ''}
         />
-      </p>
-      {!validTime && <p className="error-message">Please enter a valid time in the format HH:MM:SS</p>}
-      <p>
-        Duration (seconds):{" "}
+        {!validTime && <p className="error-message">Please enter a valid time in the format HH:MM:SS</p>}
+      </div>
+      <div className="input-group">
+        <label>Duration (seconds):</label>
         <input
           type="number"
           value={editedDuration}
           onChange={handleDurationChange}
           className={!validDuration ? 'invalid-duration' : ''}
         />
-      </p>
-      {!validDuration && <p className="error-message">Please enter a valid duration in seconds</p>}
-      <p>Priority: {selectedItem.priority}</p>
-      <p>Id: {selectedItem.id}</p>
+        {!validDuration && <p className="error-message">Please enter a valid duration in seconds</p>}
+      </div>
+      <div className="item-details">
+        <p>Priority: {selectedItem.priority}</p>
+        <p>Id: {selectedItem.id}</p>
+      </div>
       <button className="delete-button" onClick={handleDeleteClick}>Delete</button>
 
       {showConfirm && (
@@ -125,35 +127,31 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
 
       <div className="repeat-options">
         <h3>Repeat Options</h3>
-        <div>
-          <label>
-            Frequency:
-            <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-              <option value="none">None</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </label>
+        <div className="input-group">
+          <label>Frequency:</label>
+          <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
         </div>
 
-        <div>
-          <label>
-            Until:
-            <input
-              type="date"
-              value={untilDate}
-              onChange={(e) => setUntilDate(e.target.value)}
-            />
-          </label>
+        <div className="input-group">
+          <label>Until:</label>
+          <input
+            type="date"
+            value={untilDate}
+            onChange={(e) => setUntilDate(e.target.value)}
+          />
         </div>
 
         {frequency === 'daily' && (
-          <div>
+          <div className="repeat-days">
             <label>Repeat on:</label>
-            <div className="repeat-days">
+            <div className="repeat-days-checkboxes">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                <label key={index}>
+                <label key={index} className="repeat-day">
                   <input
                     type="checkbox"
                     checked={repeatDays[index]}
@@ -167,36 +165,32 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
         )}
 
         {frequency === 'weekly' && (
-          <div>
-            <label>
-              Repeat every:
-              <input
-                type="number"
-                min="1"
-                max="4"
-                value={repeatWeeks}
-                onChange={(e) => setRepeatWeeks(parseInt(e.target.value))}
-              /> weeks
-            </label>
+          <div className="input-group">
+            <label>Repeat every:</label>
+            <input
+              type="number"
+              min="1"
+              max="4"
+              value={repeatWeeks}
+              onChange={(e) => setRepeatWeeks(parseInt(e.target.value))}
+            /> weeks
           </div>
         )}
 
         {frequency === 'monthly' && (
-          <div>
-            <label>
-              Repeat every:
-              <input
-                type="number"
-                min="1"
-                max="12"
-                value={repeatMonths}
-                onChange={(e) => setRepeatMonths(parseInt(e.target.value))}
-              /> months
-            </label>
+          <div className="input-group">
+            <label>Repeat every:</label>
+            <input
+              type="number"
+              min="1"
+              max="12"
+              value={repeatMonths}
+              onChange={(e) => setRepeatMonths(parseInt(e.target.value))}
+            /> months
           </div>
         )}
 
-        <button onClick={handleAddRepeatingItems}>Add Repeats</button>
+        <button className="add-repeat-button" onClick={handleAddRepeatingItems}>Add Repeats</button>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ function App() {
     e.preventDefault();
     if (draggedItem) {
       const newItem = {
-        id: Math.random(),
+        id: Math.floor(Math.random() * 2147483647),
         name: draggedItem.name,
         startTime: startTime,
         duration: draggedItem.duration,
@@ -123,7 +123,7 @@ function App() {
         return null;
       }
       return {
-        id: Math.random(), // Уникальный идентификатор для каждого элемента
+        id: Math.floor(Math.random() * 2147483647), // Уникальный идентификатор для каждого элемента
         name: file.name,
         duration: 1,
         type: type
@@ -150,7 +150,7 @@ function App() {
         if (repeatDays[currentDate.getDay()] && currentDate.toISOString().substring(0, 10) !== item.startDate) {
           newItems.push({
             ...item,
-            id: Math.random(),
+            id: Math.floor(Math.random() * 2147483647),
             startDate: currentDate.toISOString().substring(0, 10),
             originalId: item.id
           });
@@ -160,7 +160,7 @@ function App() {
         if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
           newItems.push({
             ...item,
-            id: Math.random(),
+            id: Math.floor(Math.random() * 2147483647),
             startDate: currentDate.toISOString().substring(0, 10),
             originalId: item.id
           });
@@ -170,7 +170,7 @@ function App() {
         if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
           newItems.push({
             ...item,
-            id: Math.random(),
+            id: Math.floor(Math.random() * 2147483647),
             startDate: currentDate.toISOString().substring(0, 10),
             originalId: item.id
           });
@@ -186,6 +186,7 @@ function App() {
   return (
     <div className="container">
       <div className="list-item-holder" onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} style={{ position: 'relative' }}>
+        <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
         <input
           type="file"
           ref={fileInputRef}
@@ -209,7 +210,7 @@ function App() {
         ))}
         <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
-      <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
+      
       <div className="timeline-holder">
         <Timeline 
           items={elementsOnTimeline} 
