@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./ItemOptionHolder.css";
 
-const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeatingItems }) => {
+const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, deleteItem, addRepeatingItems }) => {
   const formatTime = (time) => {
     const hours = Math.floor(time);
     const minutes = Math.floor((time - hours) * 60);
@@ -11,6 +11,8 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeat
 
   const [editedStartTime, setEditedStartTime] = useState(formatTime(selectedItem.startTime));
   const [validTime, setValidTime] = useState(true);
+  const [editedDuration, setEditedDuration] = useState(selectedItem.duration * 3600); // Convert to seconds for editing
+  const [validDuration, setValidDuration] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [frequency, setFrequency] = useState('none');
   const [untilDate, setUntilDate] = useState();
@@ -20,6 +22,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeat
 
   useEffect(() => {
     setEditedStartTime(formatTime(selectedItem.startTime));
+    setEditedDuration(selectedItem.duration * 3600); // Convert to seconds for editing
   }, [selectedItem]);
 
   const handleStartTimeChange = (event) => {
@@ -35,6 +38,17 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeat
     }
   };
 
+  const handleDurationChange = (event) => {
+    const value = event.target.value;
+    setEditedDuration(value);
+    const isValidDuration = isValidDurationValue(value);
+    setValidDuration(isValidDuration);
+
+    if (isValidDuration) {
+      updateDuration(selectedItem.id, parseFloat(value) / 3600); // Convert seconds to hours before updating
+    }
+  };
+
   const handleBlur = () => {
     const [hours, minutes, seconds] = editedStartTime.split(':').map(parseFloat);
     const startTime = hours + minutes / 60 + seconds / 3600;
@@ -44,6 +58,10 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeat
   const isValidTimeString = (timeString) => {
     const regex = /^\d{1,2}:\d{2}:\d{2}$/;
     return regex.test(timeString);
+  };
+
+  const isValidDurationValue = (value) => {
+    return !isNaN(value) && value > 0;
   };
 
   const handleDeleteClick = () => {
@@ -83,7 +101,16 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, deleteItem, addRepeat
         />
       </p>
       {!validTime && <p className="error-message">Please enter a valid time in the format HH:MM:SS</p>}
-      <p>Duration: {selectedItem.duration}</p>
+      <p>
+        Duration (seconds):{" "}
+        <input
+          type="number"
+          value={editedDuration}
+          onChange={handleDurationChange}
+          className={!validDuration ? 'invalid-duration' : ''}
+        />
+      </p>
+      {!validDuration && <p className="error-message">Please enter a valid duration in seconds</p>}
       <p>Priority: {selectedItem.priority}</p>
       <p>Id: {selectedItem.id}</p>
       <button className="delete-button" onClick={handleDeleteClick}>Delete</button>

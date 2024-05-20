@@ -55,6 +55,12 @@ function App() {
     ));
   };
 
+  const updateItemDuration = (itemId, newDuration) => {
+    setAllElementsOnTimeline(prevItems => prevItems.map(item => 
+      item.id === itemId ? { ...item, duration: newDuration } : item
+    ));
+  };
+
   const updateItemPriority = (itemId, newPriority) => {
     setAllElementsOnTimeline(prevItems => prevItems.map(item => 
       item.id === itemId ? { ...item, priority: newPriority } : item
@@ -217,6 +223,7 @@ function App() {
         <ItemOptionHolder 
           selectedItem={selectedItem} 
           updateStartTime={updateItemStartTime} 
+          updateDuration={updateItemDuration} 
           deleteItem={deleteItemFromTimeline} 
           addRepeatingItems={addRepeatingItems} 
         />

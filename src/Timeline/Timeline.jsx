@@ -295,9 +295,6 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
           onMouseDown={(e) => handleMouseDown(e, currentItem)}
           onClick={() => handleItemClick(items[i])} // Добавляем обработчик клика
         >
-          <div style={{color:"white",textAlign: "center"}}>
-            {currentItem.name}
-          </div>
         </div>);
   
       itemsReact.push(itemElement); // Добавляем текущий элемент в список
