@@ -14,7 +14,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
   const [editedDuration, setEditedDuration] = useState(selectedItem.duration * 3600); // Convert to seconds for editing
   const [validDuration, setValidDuration] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [frequency, setFrequency] = useState('none');
+  const [frequency, setFrequency] = useState('daily');
   const [untilDate, setUntilDate] = useState();
   const [repeatDays, setRepeatDays] = useState(Array(7).fill(true)); // All days selected by default
   const [repeatWeeks, setRepeatWeeks] = useState(1);
@@ -130,7 +130,6 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
         <div className="input-group">
           <label>Frequency:</label>
           <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-            <option value="none">None</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
