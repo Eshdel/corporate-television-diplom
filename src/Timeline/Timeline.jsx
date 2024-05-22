@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const convertDecimalToTime = (decimalTime) => {
   let hours = Math.floor(decimalTime);
   let minutes = Math.floor((decimalTime - hours) * 60);
@@ -16,7 +17,6 @@ const convertDecimalToTime = (decimalTime) => {
   }
 
   const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  console.log("Tm F",formattedTime);
   return formattedTime;
 };
 
@@ -49,8 +49,14 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   };
 
   const handleMouseDown = (e, item) => {
+    const currentDateTime = new Date();
+    
+    if (currentDateTime.getTime() > item.startMicroTime) {
+      toast.info("The old date and time have already passed");
+      return;
+    }
+    
     setDraggedItem(item);
-    console.log('dragItem', item);
     setDraggedElement(e);
     setDragStartPosition({
       x: e.clientX,
@@ -66,7 +72,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
       const deltaY = e.clientY - dragStartPosition.y;
       const newLeft = dragStartPosition.left + deltaX;
       const newTop = dragStartPosition.top + deltaY;
-      draggedElement.target.style.top = `${newTop}px`;
+      //draggedElement.target.style.top = `${newTop}px`;
       draggedElement.target.style.left = `${newLeft}px`;
 
       // Вычисляем новое значение startTime
@@ -98,16 +104,16 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
       updateItemStartTime(draggedItem.id, draggedItem.startDate, formattedStartTime);
     }
 
-    if(draggedItem)  {
-      const parentHeight = draggedElement.target.parentNode.clientHeight;
-      const elementHeight = draggedElement.target.clientHeight;
-      const level = Math.min(4, Math.max(1, Math.ceil((draggedElement.target.offsetTop + elementHeight / 2) / (parentHeight / 4))));
-      const newTop = (level - 1) * (parentHeight / 4);
+    // if(draggedItem)  {
+    //   const parentHeight = draggedElement.target.parentNode.clientHeight;
+    //   const elementHeight = draggedElement.target.clientHeight;
+    //   const level = Math.min(4, Math.max(1, Math.ceil((draggedElement.target.offsetTop + elementHeight / 2) / (parentHeight / 4))));
+    //   const newTop = (level - 1) * (parentHeight / 4);
 
-      draggedElement.target.style.top = `${newTop}px`;
+    //   draggedElement.target.style.top = `${newTop}px`;
 
-      updateItemPriority(draggedItem.id, level);
-    }
+    //   updateItemPriority(draggedItem.id, level);
+    // }
     
     setDraggedElement(null);
     setDraggedItemStartTime(null);

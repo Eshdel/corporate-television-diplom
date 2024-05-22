@@ -4,13 +4,13 @@ import "./ItemOptionHolder.css";
 
 const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, deleteItem, addRepeatingItems }) => {
   const formatTime = (time) => {
-    console.log("oh base time",time);
+
     let hours = Math.floor(time);
-    console.log(hours);
+
     let minutes = Math.floor((time - hours) * 60);
-    console.log(minutes);
+ 
     let seconds = Math.round(((time - hours) * 60 - minutes) * 60);
-    console.log(seconds);
+
     if (seconds === 60) {
       seconds = 0;
       minutes += 1;
@@ -21,10 +21,10 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
     }
   
     const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    console.log("Oh F", formattedTime);
+   
     return formattedTime;
   };
-
+  
   const [editedStartTime, setEditedStartTime] = useState(formatTime(selectedItem.startTime));
   const [validTime, setValidTime] = useState(true);
   const [editedDuration, setEditedDuration] = useState(selectedItem.duration * 3600); // Convert to seconds for editing
@@ -37,7 +37,6 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
   const [repeatMonths, setRepeatMonths] = useState(1);
 
   useEffect(() => {
-    console.log("selectedItem",selectedItem);
     setEditedStartTime(formatTime(selectedItem.startTime));
     setEditedDuration(selectedItem.duration * 3600); // Convert to seconds for editing
   }, [selectedItem]);
@@ -51,7 +50,8 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
     if (isValidTime) {
       const [hours, minutes, seconds] = value.split(':').map(parseFloat);
       const startTime = hours + minutes / 60 + seconds / 3600;
-      updateStartTime(selectedItem.id, startTime);
+      
+      updateStartTime(selectedItem.id, selectedItem.startDate, formatTime(startTime));
     }
   };
 
@@ -69,7 +69,6 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
   const handleBlur = () => {
     const [hours, minutes, seconds] = editedStartTime.split(':').map(parseFloat);
     const startTime = hours + minutes / 60 + seconds / 3600;
-    updateStartTime(selectedItem.id, startTime);
   };
 
   const isValidTimeString = (timeString) => {
@@ -120,13 +119,14 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
       </div>
       <div className="input-group">
         <label>Duration (seconds):</label>
-        <input
+        <span>{editedDuration}</span>
+        {/* <input
           type="number"
           value={editedDuration}
           onChange={handleDurationChange}
           className={!validDuration ? 'invalid-duration' : ''}
         />
-        {!validDuration && <p className="error-message">Please enter a valid duration in seconds</p>}
+        {!validDuration && <p className="error-message">Please enter a valid duration in seconds</p>} */}
       </div>
       <div className="item-details">
         <p>Priority: {selectedItem.priority}</p>

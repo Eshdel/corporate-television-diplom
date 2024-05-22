@@ -6,8 +6,8 @@ import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
 import {getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, convertToVideo, deleteMedia,deleteMediaFromTimeline, updateElement} from "./Api";
 import ConvertDialog from "./ConvertDialog/ConvertDialog"; // Импортируем новый компонент
-import { ToastContainer, toast } from 'react-toastify';
 import ScheduleDialog from "./ScheduleDialog/ScheduleDialog"; 
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
@@ -71,8 +71,8 @@ function App() {
           startDate: moment(startDate).format('YYYY-MM-DD'),
           endDate: moment(endDate).format('YYYY-MM-DD'),
           getingDur: (endDate - startDate),
-          getingStartTime: `${startDate.getHours()}:${startDate.getMinutes()}:${startDate.getSeconds()}`,
-          getingEndTime: `${endDate.getHours()}:${endDate.getMinutes()}:${endDate.getSeconds()}`
+          startMicroTime: startDate.getTime(),
+          endMicroTime: endDate.getTime()
         };
       });
       setAllElementsOnTimeline(transformedData);
@@ -155,9 +155,6 @@ function App() {
         updateElementsOnTimeline(); // Вызов функции обновления элементов на временной линии
     } catch (error) {
         toast.error('Error updating element start time: ' +  error.response.data);
-        await updateElementsOnTimeline();
-        const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
-        setElementsOnTimeline(filteredElements);
     }
 };
   const updateItemDuration = (itemId, newDuration) => {
