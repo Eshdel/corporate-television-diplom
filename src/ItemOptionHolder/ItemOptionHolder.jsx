@@ -3,9 +3,19 @@ import "./ItemOptionHolder.css";
 
 const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, deleteItem, addRepeatingItems }) => {
   const formatTime = (time) => {
-    const hours = Math.floor(time);
-    const minutes = Math.floor((time - hours) * 60);
-    const seconds = Math.round(((time - hours) * 60 - minutes) * 60);
+    let hours = Math.floor(time);
+    let minutes = Math.floor((time - hours) * 60);
+    let seconds = Math.round(((time - hours) * 60 - minutes) * 60);
+
+    if (seconds === 60) {
+      seconds = 0;
+      minutes += 1;
+    }
+    if (minutes === 60) {
+      minutes = 0;
+      hours += 1;
+    }
+    
     return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
@@ -89,7 +99,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
 
   return (
     <div className="item-option-holder">
-      <h2>{selectedItem.name}</h2>
+      <h2>{selectedItem.name + '.' + selectedItem.format}</h2>
       <div className="input-group">
         <label>Start Time:</label>
         <input
