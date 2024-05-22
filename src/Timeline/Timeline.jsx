@@ -1,6 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Timeline.css";
 
+const convertDecimalToTime = (decimalTime) => {
+  let hours = Math.floor(decimalTime);
+  let minutes = Math.floor((decimalTime - hours) * 60);
+  let seconds = Math.round(((decimalTime - hours) * 60 - minutes) * 60);
+
+  if (seconds === 60) {
+    seconds = 0;
+    minutes += 1;
+  }
+  if (minutes === 60) {
+    minutes = 0;
+    hours += 1;
+  }
+
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  console.log("Tm F",formattedTime);
+  return formattedTime;
+};
+
 const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedItem, handleDrop, leftPanelItemDrag}) => {
   const widthLabels = 300;
 
@@ -31,6 +50,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
 
   const handleMouseDown = (e, item) => {
     setDraggedItem(item);
+    console.log('dragItem', item);
     setDraggedElement(e);
     setDragStartPosition({
       x: e.clientX,
@@ -74,7 +94,8 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   const handleMouseUp = () => {
     // Обновляем startTime элемента в данных items
     if(draggedItem && draggedItemStartTime) {
-      updateItemStartTime(draggedItem.id, draggedItemStartTime);
+      const formattedStartTime = convertDecimalToTime(draggedItemStartTime);
+      updateItemStartTime(draggedItem.id, draggedItem.startDate, formattedStartTime);
     }
 
     if(draggedItem)  {
@@ -178,7 +199,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
       newTop = (item.priority - 1) * (1188.7 / 4);
     }
     
-    return { id: item.id, name: item.name, left: left, top: newTop, width: item.duration * widthLabels * scale};    
+    return { ...item, left: left, top: newTop, width: item.duration * widthLabels * scale};    
   }
 
   // Обработчик события прокрутки

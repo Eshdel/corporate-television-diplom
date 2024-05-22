@@ -119,6 +119,7 @@ export const deleteMediaFromTimeline = async (elementId) => {
 
 export const placeElement = async (fileType, fileName, fileFormat, startTime, timeZone, priority) => {
   // Форматируем дату и время начала показа
+
   let formattedDateTime = moment(startTime).format('YYYY-MM-DD HH:mm:ss');
 
   // JSON данные для отправки на сервер
@@ -131,8 +132,10 @@ export const placeElement = async (fileType, fileName, fileFormat, startTime, ti
       priority: priority // Приоритет
   };
 
+  console.log("PlaceElement json data",jsonData);
+
   try {
-      const response = await axios.post('http://217.71.129.139:4184/placeelement', jsonData);
+      const response = await axios.post('http://158.160.1.0:4004/placeelement', jsonData);
       console.log('Response:', response.data);
       return response.data;
   } catch (error) {
@@ -140,6 +143,34 @@ export const placeElement = async (fileType, fileName, fileFormat, startTime, ti
       throw error;
   }
 };
+
+// Метод для обновления элемента
+export const updateElement = async (elementId, newStartTime, timeZone) => {
+  // Форматируем дату и время начала в нужный формат
+ 
+  let formattedDateTime = moment(newStartTime).format('YYYY-MM-DD HH:mm:ss');
+  
+
+  // JSON данные для отправки на сервер
+  const jsonData = {
+      id_element: elementId, // ID элемента для обновления
+      full_datetime_start_new: formattedDateTime, // Новая дата и время начала в формате 'YYYY-MM-DD HH:mm:ss'
+      time_zone: timeZone // Часовой пояс для новой даты и времени
+  };
+
+  console.log('formattedDateTime', jsonData);
+
+  try {
+      // Отправляем PUT запрос на сервер
+      const response = await axios.put('http://158.160.1.0:4004/moveelement', jsonData);
+      console.log('Response:', response.data);
+      return response.data;
+  } catch (error) {
+      console.error('Error:', error.response.data);
+      throw error;
+  }
+};
+
 export const testPost = async (file) => {
   const fileName = file.name.split('.').slice(0, -1).join('.');
   try {

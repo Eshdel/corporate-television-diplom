@@ -4,28 +4,33 @@ import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
-import {getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, convertToVideo, deleteMedia,deleteMediaFromTimeline} from "./Api";
+import {getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, convertToVideo, deleteMedia,deleteMediaFromTimeline, updateElement} from "./Api";
 import ConvertDialog from "./ConvertDialog/ConvertDialog"; // Импортируем новый компонент
 import { ToastContainer, toast } from 'react-toastify';
+import ScheduleDialog from "./ScheduleDialog/ScheduleDialog"; 
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
+    const moment = require('moment-timezone');
+
     const [draggedItem, setDraggedItem] = useState(null);
     const [items, setItems] = useState([]);
     const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]);
     const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 10));
+    const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
     const [selectedItem, setSelectedItem] = useState(null);
     const [showConfirm, setShowConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showTrashBin, setShowTrashBin] = useState(false);
     const [showConvertDialog, setShowConvertDialog] = useState(false);
+    const [showScheduleDialog, setShowScheduleDialog] = useState(false);
     const [fileToConvert, setFileToConvert] = useState(null);
+    const [elementToTimeline, setElementToTimeline] = useState(null);
     const [converting, setConverting] = useState(false);
     const [serverTimezone, setServerTimezone] = useState(null);
     const fileInputRef = useRef(null);
     
-    const moment = require('moment-timezone');
+
   
     const updateMediaFileList = async () => {
       try {
@@ -48,23 +53,26 @@ function App() {
       const data = await getListOfMediaOnTimeline();
       const newTimezone = data.find(element => element.timezone)?.timezone;
       setServerTimezone(newTimezone);
+
       const transformedData = data.filter(element => !element.timezone).map(element => {
-        const newStartDate = moment.tz(element.full_datetime_start, serverTimezone);
-        const newEndDate = moment.tz(element.full_datetime_end, serverTimezone);
-        const startDate = newStartDate.toDate();
+        const newStartDate = moment.tz(element.full_datetime_start, serverTimezone).local();
+        const newEndDate = moment.tz(element.full_datetime_end, serverTimezone).local();
+        
+        const startDate = newStartDate.toDate();  
         const endDate = newEndDate.toDate();
+
         return {
           id: element.id,
           name: `${element.file_name}`,
-          startTime: startDate.getHours() + startDate.getMinutes() / 60,
+          startTime: startDate.getHours() + startDate.getMinutes() / 60 + startDate.getSeconds() / 3600,
           duration: (endDate - startDate) / 3600000,
           priority: element.priority,
           format: element.file_format,
-          startDate: startDate.toISOString().substring(0, 10),
-          endDate: endDate.toISOString().substring(0, 10),
+          startDate: moment(startDate).format('YYYY-MM-DD'),
+          endDate: moment(endDate).format('YYYY-MM-DD'),
           getingDur: (endDate - startDate),
-          getingStartTime: `${startDate.getHours()} + ${startDate.getMinutes()} + ${startDate.getSeconds()}`,
-          getingEndTime: `${endDate.getHours()} + ${endDate.getMinutes()} + ${endDate.getSeconds()}`
+          getingStartTime: `${startDate.getHours()}:${startDate.getMinutes()}:${startDate.getSeconds()}`,
+          getingEndTime: `${endDate.getHours()}:${endDate.getMinutes()}:${endDate.getSeconds()}`
         };
       });
       setAllElementsOnTimeline(transformedData);
@@ -108,28 +116,50 @@ function App() {
   };
   
   const handleDropOnTimeline = async (e, startTime) => {
-      e.preventDefault();
-      if (draggedItem) {
-          const newItem = {
-              id: Math.floor(Math.random() * 2147483647),
-              name: draggedItem.name,
-              startTime: startTime,
-              duration: draggedItem.duration || 1,
-              priority: 1,
-              type: draggedItem.type,
-              startDate: selectedDate
-          };
-          setAllElementsOnTimeline(prevItems => [...prevItems, newItem]);
-          setShowTrashBin(false);
+    e.preventDefault();
+    if (draggedItem) {
+      if (draggedItem.type !== 'video') {
+        toast.error("You need to convert the item to video format first.");
+        return;
       }
+      setElementToTimeline(draggedItem);
+      setShowScheduleDialog(true);
+    }
+  };
+
+  const handleSchedule = async (item, startDate, priority) => {
+    setShowScheduleDialog(false);
+    
+    const timeZone = moment.tz.guess();
+    try {
+      console.log("Placement args", `${item.type}, ${item.name.split('.')[0]} , ${item.name.split('.')[1]}, ${startDate}, ${timeZone}, ${priority}`);
+      await placeElement(item.type, item.name.split('.')[0], item.name.split('.')[1], startDate, timeZone, priority);
+      toast.success('Element scheduled successfully');
+      updateElementsOnTimeline();
+    } catch (error) {
+      toast.error('Error scheduling element: ' + error.message);
+    }
+    setShowScheduleDialog(false);
+    setDraggedItem(null); // Сброс draggedItem после завершения планирования
   };
   
-  const updateItemStartTime = (itemId, newStartTime) => {
-      setAllElementsOnTimeline(prevItems => prevItems.map(item => 
-          item.id === itemId ? { ...item, startTime: newStartTime } : item
-      ));
-  };
-  
+  const updateItemStartTime = async (itemId, newStartDate, newStartTime) => {
+    try {
+      console.log('newStartTime', newStartTime);
+        const newDateTime = moment(`${newStartDate} ${newStartTime}`, 'YYYY-MM-DD HH:mm:ss');
+        console.log('newStartDate',newStartDate);
+        console.log('New date Time',newDateTime);
+        const timeZone = moment.tz.guess(); // Используйте нужный часовой пояс
+        await updateElement(itemId, newDateTime, timeZone);
+        toast.success('Element start time updated successfully');
+        updateElementsOnTimeline(); // Вызов функции обновления элементов на временной линии
+    } catch (error) {
+        toast.error('Error updating element start time: ' +  error.response.data);
+        await updateElementsOnTimeline();
+        const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
+        setElementsOnTimeline(filteredElements);
+    }
+};
   const updateItemDuration = (itemId, newDuration) => {
       setAllElementsOnTimeline(prevItems => prevItems.map(item => 
           item.id === itemId ? { ...item, duration: newDuration } : item
@@ -282,76 +312,77 @@ function App() {
     setShowConvertDialog(false);
   };
   
-  
-    return (
-      <div className="container">
-        <div className="list-item-holder" onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} style={{ position: 'relative' }}>
-          <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> {/* Добавляем компонент выбора даты */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            multiple
-            onChange={handleFileChange}
-          />
-          <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
-          <button className="save-button">Save</button>
-          <div className="scrollable-list">
-            {items.map((item, index) => (
-              <div
-                className="list-item"
-                key={item.id} // Используем уникальный идентификатор в качестве ключа
-                draggable
-                onDragStart={(e) => handleDragStart(e, item)}
-                onDragEnd={handleDragEnd}
-              >
-                <p style={{ marginLeft: "8px" }}>Name: {item.name}</p>
-                <p style={{ marginLeft: "8px" }}>Type: {item.type}</p>
-                {item.type !== 'video' && (
-                  <button onClick={() => handleConvertClick(item)}>Convert to Video</button>
-                )}
-              </div>
-            ))}
-          </div>
-          <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
+  return (
+    <div className="container">
+      <div className="list-item-holder" onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} style={{ position: 'relative' }}>
+        <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> 
+        <input type="file" ref={fileInputRef} style={{ display: 'none' }} multiple onChange={handleFileChange} />
+        <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
+        <button className="save-button">Save</button>
+        <div className="scrollable-list">
+          {items.map((item) => (
+            <div className="list-item" key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
+              <p style={{ marginLeft: "8px" }}>Name: {item.name}</p>
+              <p style={{ marginLeft: "8px" }}>Type: {item.type}</p>
+              {item.type !== 'video' && (
+                <button onClick={() => handleConvertClick(item)}>Convert to Video</button>
+              )}
+            </div>
+          ))}
         </div>
-        
-        <ToastContainer position="top-center" autoClose={5000} />
-        
-        <div className="timeline-holder">
-          <Timeline
-            items={elementsOnTimeline}
-            updateItemStartTime={updateItemStartTime}
-            updateItemPriority={updateItemPriority}
-            setSelectedItem={setSelectedItem}
-            handleDrop={handleDropOnTimeline}
-          />
-        </div>
-        {selectedItem && (
-          <ItemOptionHolder
-            selectedItem={selectedItem}
-            updateStartTime={updateItemStartTime}
-            updateDuration={updateItemDuration}
-            deleteItem={deleteItemFromTimeline}
-            addRepeatingItems={addRepeatingItems}
-          />
-        )}
-        {showConfirm && (
-          <div className="confirm-dialog">
-            <p>Are you sure you want to delete {itemToDelete.name}?</p>
-            <button onClick={confirmDelete}>Yes</button>
-            <button onClick={cancelDelete}>No</button>
-          </div>
-        )}
-        {showConvertDialog && fileToConvert && !converting && (
-            <ConvertDialog
-                file={fileToConvert}
-                onClose={() => setShowConvertDialog(false)}
-                onConvert={handleConvert}
-            />
-        )}
+        <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
-    );
-  }
-  
-  export default App;
+      
+      <ToastContainer position="top-center" autoClose={5000} />
+      
+      <div className="timeline-holder">
+        <Timeline
+          items={elementsOnTimeline}
+          updateItemStartTime={updateItemStartTime}
+          updateItemPriority={updateItemPriority}
+          setSelectedItem={setSelectedItem}
+          handleDrop={handleDropOnTimeline}
+        />
+      </div>
+      {selectedItem && (
+        <ItemOptionHolder
+          selectedItem={selectedItem}
+          updateStartTime={updateItemStartTime}
+          updateDuration={updateItemDuration}
+          deleteItem={deleteItemFromTimeline}
+          addRepeatingItems={addRepeatingItems}
+        />
+      )}
+      {showConfirm && (
+        <div className="confirm-dialog">
+          <p>Are you sure you want to delete {itemToDelete.name}?</p>
+          <button onClick={confirmDelete}>Yes</button>
+          <button onClick={cancelDelete}>No</button>
+        </div>
+      )}
+      {showConvertDialog && fileToConvert && !converting && (
+          <ConvertDialog
+              file={fileToConvert}
+              onClose={() => {
+                setShowConvertDialog(false); 
+                setFileToConvert(null);
+              }
+            }
+              onConvert={handleConvert}
+          />
+      )}
+      {showScheduleDialog && elementToTimeline && (
+        <ScheduleDialog
+          item={elementToTimeline}
+          onClose={() => {
+            setShowScheduleDialog(false);
+            setElementToTimeline(null);
+          }}
+          onSchedule={handleSchedule}
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;

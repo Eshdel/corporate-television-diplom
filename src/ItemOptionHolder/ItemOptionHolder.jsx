@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./ItemOptionHolder.css";
 
+
 const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, deleteItem, addRepeatingItems }) => {
   const formatTime = (time) => {
+    console.log("oh base time",time);
     let hours = Math.floor(time);
+    console.log(hours);
     let minutes = Math.floor((time - hours) * 60);
+    console.log(minutes);
     let seconds = Math.round(((time - hours) * 60 - minutes) * 60);
-
+    console.log(seconds);
     if (seconds === 60) {
       seconds = 0;
       minutes += 1;
@@ -15,8 +19,10 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
       minutes = 0;
       hours += 1;
     }
-    
-    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    console.log("Oh F", formattedTime);
+    return formattedTime;
   };
 
   const [editedStartTime, setEditedStartTime] = useState(formatTime(selectedItem.startTime));
@@ -31,6 +37,7 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
   const [repeatMonths, setRepeatMonths] = useState(1);
 
   useEffect(() => {
+    console.log("selectedItem",selectedItem);
     setEditedStartTime(formatTime(selectedItem.startTime));
     setEditedDuration(selectedItem.duration * 3600); // Convert to seconds for editing
   }, [selectedItem]);
