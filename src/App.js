@@ -67,12 +67,15 @@ function App() {
           startTime: startDate.getHours() + startDate.getMinutes() / 60 + startDate.getSeconds() / 3600,
           duration: (endDate - startDate) / 3600000,
           priority: element.priority,
+          type: 'video',
           format: element.file_format,
           startDate: moment(startDate).format('YYYY-MM-DD'),
           endDate: moment(endDate).format('YYYY-MM-DD'),
           getingDur: (endDate - startDate),
           startMicroTime: startDate.getTime(),
-          endMicroTime: endDate.getTime()
+          endMicroTime: endDate.getTime(),
+          startDateTime: moment(startDate).format('YYYY-MM-DD HH:mm:ss'),
+          endDateTime: moment(endDate).format('YYYY-MM-DD HH:mm:ss'),
         };
       });
       setAllElementsOnTimeline(transformedData);
@@ -245,50 +248,57 @@ function App() {
       fileInputRef.current.click();
   };
   
-  const addRepeatingItems = (item, frequency, untilDate, repeatDays, repeatWeeks, repeatMonths) => {
-      const until = new Date(untilDate);
-      let currentDate = new Date(selectedDate);
-  
-      setAllElementsOnTimeline(prevItems => prevItems.filter(i => i.originalId !== item.id));
-  
-      const newItems = [];
-  
-      while (currentDate <= until) {
-          if (frequency === 'daily') {
-              if (repeatDays[currentDate.getDay()] && currentDate.toISOString().substring(0, 10) !== item.startDate) {
-                  newItems.push({
-                      ...item,
-                      id: Math.floor(Math.random() * 2147483647),
-                      startDate: currentDate.toISOString().substring(0, 10),
-                      originalId: item.id
-                  });
-              }
-              currentDate.setDate(currentDate.getDate() + 1);
-          } else if (frequency === 'weekly') {
-              if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
-                  newItems.push({
-                      ...item,
-                      id: Math.floor(Math.random() * 2147483647),
-                      startDate: currentDate.toISOString().substring(0, 10),
-                      originalId: item.id
-                  });
-              }
-              currentDate.setDate(currentDate.getDate() + (7 * repeatWeeks));
-          } else if (frequency === 'monthly') {
-              if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
-                  newItems.push({
-                      ...item,
-                      id: Math.floor(Math.random() * 2147483647),
-                      startDate: currentDate.toISOString().substring(0, 10),
-                      originalId: item.id
-                  });
-              }
-              currentDate.setMonth(currentDate.getMonth() + repeatMonths);
-          }
-      }
-  
-      setAllElementsOnTimeline(prevItems => [...prevItems, ...newItems]);
-  };
+  const addRepeatingItems = async (item, frequency, untilDate, repeatDays, repeatWeeks, repeatMonths) => {
+    const until = new Date(untilDate);
+    const startDate = new Date(item.startMicroTime); // Используем startMicroTime
+    const timeZone = moment.tz.guess();
+
+    try {
+        // Устанавливаем часы, минуты и секунды у until такими же, как у currentDate
+        until.setHours(startDate.getHours());
+        until.setMinutes(startDate.getMinutes());
+        until.setSeconds(startDate.getSeconds());
+        
+        //const untilDateWithoutTime = new Date(until.getFullYear(), until.getMonth(), until.getDate()); // Исключаем время из untilDate
+        const startDateWithoutTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()); // Исключаем время из startDate
+
+        if (until < startDateWithoutTime) {
+            toast.error('The end date cannot be earlier than the start date.');
+            return;
+        }
+
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= until) { // Сравниваем только по дате, без времени
+            if (frequency === 'daily') {
+                if (repeatDays[currentDate.getDay()] && currentDate.toISOString().substring(0, 10) !== item.startDate) {
+                    const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
+                    console.log('Start date str Repeat', startDateStr);
+                    await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            } else if (frequency === 'weekly') {
+                if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
+                    const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
+                    await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+                }
+                currentDate.setDate(currentDate.getDate() + (7 * repeatWeeks));
+            } else if (frequency === 'monthly') {
+                if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
+                    const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
+                    await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+                }
+                currentDate.setMonth(currentDate.getMonth() + repeatMonths);
+            }
+        }
+
+        updateElementsOnTimeline();
+    } catch (error) {
+        toast.error('An error occurred while adding repeating items: ' + error.response.data);
+        console.error('Error adding repeating items:', error);
+    }
+};
+
   
   const handleConvertClick = (file) => {
       setFileToConvert(file);
@@ -315,7 +325,7 @@ function App() {
         <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> 
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} multiple onChange={handleFileChange} />
         <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
-        <button className="save-button">Save</button>
+        <button className="save-button">Timetable</button>
         <div className="scrollable-list">
           {items.map((item) => (
             <div className="list-item" key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
