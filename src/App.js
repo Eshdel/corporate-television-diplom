@@ -252,7 +252,7 @@ function App() {
     const until = new Date(untilDate);
     const startDate = new Date(item.startMicroTime); // Используем startMicroTime
     const timeZone = moment.tz.guess();
-
+    let traikerOperations = 0;
     try {
         // Устанавливаем часы, минуты и секунды у until такими же, как у currentDate
         until.setHours(startDate.getHours());
@@ -290,12 +290,17 @@ function App() {
                 }
                 currentDate.setMonth(currentDate.getMonth() + repeatMonths);
             }
+            traikerOperations++;
         }
 
         updateElementsOnTimeline();
+        if(traikerOperations > 1) {
+          toast.success("All repeats added successfully");
+        }
     } catch (error) {
         toast.error('An error occurred while adding repeating items: ' + error.response.data);
         console.error('Error adding repeating items:', error);
+        updateElementsOnTimeline();
     }
 };
 
