@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/corporate-television-diplom/static/css/main.4b7709c9.css",
-    "main.js": "/corporate-television-diplom/static/js/main.f8d35cae.js",
-    "static/js/453.2471f61e.chunk.js": "/corporate-television-diplom/static/js/453.2471f61e.chunk.js",
+    "main.css": "/corporate-television-diplom/static/css/main.a3e28e30.css",
+    "main.js": "/corporate-television-diplom/static/js/main.003ecfad.js",
+    "static/js/453.eeedf75d.chunk.js": "/corporate-television-diplom/static/js/453.eeedf75d.chunk.js",
     "index.html": "/corporate-television-diplom/index.html",
-    "main.4b7709c9.css.map": "/corporate-television-diplom/static/css/main.4b7709c9.css.map",
-    "main.f8d35cae.js.map": "/corporate-television-diplom/static/js/main.f8d35cae.js.map",
-    "453.2471f61e.chunk.js.map": "/corporate-television-diplom/static/js/453.2471f61e.chunk.js.map"
+    "main.a3e28e30.css.map": "/corporate-television-diplom/static/css/main.a3e28e30.css.map",
+    "main.003ecfad.js.map": "/corporate-television-diplom/static/js/main.003ecfad.js.map",
+    "453.eeedf75d.chunk.js.map": "/corporate-television-diplom/static/js/453.eeedf75d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.4b7709c9.css",
-    "static/js/main.f8d35cae.js"
+    "static/css/main.a3e28e30.css",
+    "static/js/main.003ecfad.js"
   ]
 }
