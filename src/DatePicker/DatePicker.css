@@ -1,0 +1,37 @@
+/* Стили для контейнера DatePicker */
+.date-picker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  /*   background-color: #f0f0f0; /* Цвет фона */
+    /* border: 2px solid #512da8; Цвет границы */
+   /* border-radius: 10px; /* Закругленные углы */
+/*    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Тень */
+  }
+  
+  /* Стили для поля ввода даты */
+  .date-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none; /* Убираем стандартное выделение */
+    background-color: #fff;
+    color: #333; /* Цвет текста */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Легкая тень */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Плавный переход для границы и тени */
+  }
+  
+  /* Стили для поля ввода даты при фокусе */
+  .date-input:focus {
+    border-color: #512da8; /* Цвет границы при фокусе */
+    box-shadow: 0 0 8px rgba(81, 45, 168, 0.2); /* Тень при фокусе */
+  }
+  
+  /* Стили для поля ввода даты при наведении */
+  .date-input:hover {
+    border-color: #512da8; /* Цвет границы при наведении */
+  }
+  

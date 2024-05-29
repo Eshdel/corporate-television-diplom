@@ -1,4 +1,3 @@
-/* Стили для контейнера App */
 .container {
   display: flex;
   flex-direction: row; /* Располагаем элементы в строку */
@@ -19,12 +18,20 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
   padding: 10px;
   overflow: hidden; /* Убираем горизонтальную прокрутку */
+  position: relative;
 }
+
+.list-item-holder.drag-over {
+  border: 2px dashed #512da8; /* Измените цвет и стиль границы */
+  background-color: rgba(81, 45, 168, 0.1); /* Измените цвет фона */
+}
+
 .scrollable-list {
   flex: 1; /* Займёт доступное пространство */
   overflow-y: auto; /* Включаем вертикальную прокрутку */
   overflow-x: hidden;
 }
+
 /* Стили для скроллбара */
 .scrollable-list::-webkit-scrollbar {
   width: 8px; /* Ширина скроллбара */
@@ -60,14 +67,15 @@
   padding: 10px; /* Добавим отступы внутри элемента */
   margin-left: 20px; /* Отступ слева между элементами */
 }
+
 .list-item {
   width: 95%;
-  border: 1px solid  #512da8; /* задаем цвет фона */
+  border: 1px solid #512da8; /* задаем цвет фона */
   border-radius: 8px; /* закругляем углы элемента списка */
   margin-bottom: 10px;
 }
 
-.save-button{
+.save-button {
   background-color: #512da8;
   color: #fff;
   font-size: 12px;
@@ -82,7 +90,7 @@
   cursor: pointer;
 }
 
- .upload-button{
+.upload-button {
   background-color: transparent;
   color: #512da8;
   font-size: 12px;

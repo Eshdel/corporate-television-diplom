@@ -1,5 +1,5 @@
-// DatePicker.js
 import React from 'react';
+import './DatePicker.css';
 
 function DatePicker({ selectedDate, setSelectedDate }) {
   const handleDateChange = (e) => {
@@ -8,7 +8,7 @@ function DatePicker({ selectedDate, setSelectedDate }) {
 
   return (
     <div className="date-picker">
-      <input type="date" value={selectedDate} onChange={handleDateChange} />
+      <input type="date" className="date-input" value={selectedDate} onChange={handleDateChange} />
     </div>
   );
 }
