@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { FaVideo, FaImage, FaFilePowerpoint } from 'react-icons/fa'; // Импортируем иконки
 import "./App.css";
 import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
@@ -29,6 +30,7 @@ function App() {
   const [converting, setConverting] = useState(false);
   const [serverTimezone, setServerTimezone] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false); // Добавим состояние для отображения зоны перетаскивания
+  const [activeTab, setActiveTab] = useState('video'); // Добавим состояние для активной вкладки
   const fileInputRef = useRef(null);
 
   const updateMediaFileList = async () => {
@@ -339,6 +341,21 @@ function App() {
     setShowConvertDialog(false);
   };
 
+  const renderMediaFiles = () => {
+    return mediaFiles
+      .filter(item => item.type === activeTab)
+      .map((item) => (
+        <div className={`list-item ${item.type}`} key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
+          <div className="file-icon">
+            {item.type === 'video' && <FaVideo />}
+            {item.type === 'image' && <FaImage />}
+            {item.type === 'presentation' && <FaFilePowerpoint />}
+          </div>
+          <p className="file-name">{item.name}</p>
+        </div>
+      ));
+  };
+
   return (
     <div className="container">
       <div
@@ -350,18 +367,23 @@ function App() {
       >
         <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} multiple onChange={handleFileChange} />
-        <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
-        <button className="save-button">Save</button>
+        <div className="buttons-container">
+          <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
+          <button className="save-button">Save</button>
+        </div>
+        <div className="tabs">
+          <button className={`tab video ${activeTab === 'video' ? 'active' : ''}`} onClick={() => setActiveTab('video')}>
+            <FaVideo /> Video
+          </button>
+          <button className={`tab image ${activeTab === 'image' ? 'active' : ''}`} onClick={() => setActiveTab('image')}>
+            <FaImage /> Image
+          </button>
+          <button className={`tab presentation ${activeTab === 'presentation' ? 'active' : ''}`} onClick={() => setActiveTab('presentation')}>
+            <FaFilePowerpoint /> Presentation
+          </button>
+        </div>
         <div className="scrollable-list">
-          {mediaFiles.map((item) => (
-            <div className="list-item" key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
-              <p style={{ marginLeft: "8px" }}>Name: {item.name}</p>
-              <p style={{ marginLeft: "8px" }}>Type: {item.type}</p>
-              {item.type !== 'video' && (
-                <button onClick={() => handleConvertClick(item)}>Convert to Video</button>
-              )}
-            </div>
-          ))}
+          {renderMediaFiles()}
         </div>
         <TrashBin isVisible={showTrashBin} onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrashBin} />
       </div>
@@ -399,8 +421,7 @@ function App() {
           onClose={() => {
             setShowConvertDialog(false);
             setFileToConvert(null);
-          }
-          }
+          }}
           onConvert={handleConvert}
         />
       )}

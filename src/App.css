@@ -1,12 +1,11 @@
 .container {
   display: flex;
-  flex-direction: row; /* Располагаем элементы в строку */
-  align-items: flex-start; /* Выравниваем по верхнему краю */
-  padding: 20px; /* Добавим немного отступов */
-  overflow-x: auto; /* Включаем горизонтальный скролл */
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20px;
+  overflow-x: auto;
 }
 
-/* Стили для дочернего элемента .list-item-holder */
 .list-item-holder {
   display: flex;
   flex-direction: column;
@@ -17,62 +16,133 @@
   border-radius: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
   padding: 10px;
-  overflow: hidden; /* Убираем горизонтальную прокрутку */
+  overflow: hidden;
   position: relative;
 }
 
 .list-item-holder.drag-over {
-  border: 2px dashed #512da8; /* Измените цвет и стиль границы */
-  background-color: rgba(81, 45, 168, 0.1); /* Измените цвет фона */
+  border: 2px dashed #512da8;
+  background-color: rgba(81, 45, 168, 0.1);
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  background-color: #ddd;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.tab svg {
+  margin-right: 5px;
+}
+
+.tab.video.active {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.tab.image.active {
+  background-color: #388e3c;
+  color: white;
+}
+
+.tab.presentation.active {
+  background-color: #f57c00;
+  color: white;
 }
 
 .scrollable-list {
-  flex: 1; /* Займёт доступное пространство */
-  overflow-y: auto; /* Включаем вертикальную прокрутку */
+  flex: 1;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* Стили для скроллбара */
 .scrollable-list::-webkit-scrollbar {
-  width: 8px; /* Ширина скроллбара */
+  width: 8px;
 }
 
 .scrollable-list::-webkit-scrollbar-track {
-  background: #f1f1f1; /* Цвет трека */
-  border-radius: 10px; /* Закругленные углы */
+  background: #f1f1f1;
+  border-radius: 10px;
 }
 
 .scrollable-list::-webkit-scrollbar-thumb {
-  background: #888; /* Цвет ползунка */
-  border-radius: 10px; /* Закругленные углы */
+  background: #888;
+  border-radius: 10px;
 }
 
 .scrollable-list::-webkit-scrollbar-thumb:hover {
-  background: #555; /* Цвет ползунка при наведении */
+  background: #555;
 }
 
-/* Стили для дочернего элемента .timeline-holder */
 .timeline-holder {
-  flex: 1; /* Займет все доступное пространство */
-  overflow-x: auto; /* Включаем горизонтальный скролл */
+  flex: 1;
+  overflow-x: auto;
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;
 }
 
-/* Стили для дочернего элемента .item-option-holder */
 .item-option-holder {
-  width: 300px; /* Фиксированная ширина */
-  background-color: #f0f0f0; /* Цвет фона для наглядности */
-  padding: 10px; /* Добавим отступы внутри элемента */
-  margin-left: 20px; /* Отступ слева между элементами */
+  width: 300px;
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-left: 20px;
 }
 
 .list-item {
-  width: 95%;
-  border: 1px solid #512da8; /* задаем цвет фона */
-  border-radius: 8px; /* закругляем углы элемента списка */
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
   margin-bottom: 10px;
+  padding-left: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+}
+
+.list-item.video {
+  border: 1px solid #d32f2f;
+}
+
+.list-item.image {
+  border: 1px solid #388e3c;
+}
+
+.list-item.presentation {
+  border: 1px solid #f57c00;
+}
+
+.file-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.file-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .save-button {
