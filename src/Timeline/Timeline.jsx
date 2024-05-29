@@ -174,20 +174,27 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   };
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "6") {
-        zoomIn();
-      } else if (event.key === "7") {
-        zoomOut();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
+    let timeoutId;
   
+    const handleWheel = (event) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (event.deltaY > 0) {
+          zoomOut();
+        } else {
+          zoomIn();
+        }
+      }, 200); // Установите желаемую задержку здесь (в миллисекундах)
+    };
+  
+    window.addEventListener("wheel", handleWheel);
+    
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("wheel", handleWheel);
+      clearTimeout(timeoutId);
     };
   }, [zoomIn, zoomOut]);
+  
 
   useEffect(() => {
     updateScale();

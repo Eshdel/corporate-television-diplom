@@ -6,9 +6,11 @@ import axios from 'axios';
 import FormData from 'form-data';
 import moment from 'moment-timezone';
 
+
+const link = 'http://84.201.178.7:4004';
 export const getListOfMediaFiles = async () => {
     try {
-        const response = await axios.get('http://158.160.1.0:4004/listmedia');
+        const response = await axios.get(`${link}/listmedia`);
         // В ответе содержится данные от сервера, с которыми вы можете работать дальше
         console.log(response.data);
         return response.data;
@@ -21,7 +23,7 @@ export const getListOfMediaFiles = async () => {
 
 export const getListOfMediaOnTimeline = async () => {
   try {
-      const response = await axios.get('http://158.160.1.0:4004/listelements');
+      const response = await axios.get(`${link}/listelements`);
       console.log("Succesfull elements on timeline: " , response.data);
       return response.data;
   } catch (error) {
@@ -48,7 +50,7 @@ export const convertToVideo = async (fileType, fileName, fileFormat, toFileName,
       },
     ];
 
-    const response = await axios.put('http://158.160.1.0:4004/tovideo', requestData, {
+    const response = await axios.put(`${link}/tovideo`, requestData, {
       timeout: 0 // Убираем таймаут
   });
     console.log('Response Convert:', response);
@@ -77,7 +79,7 @@ export const uploadMediaFile = async (file) => {
   form.append('jsonFile', JSON.stringify(jsonData));
 
   try {
-    const response = await axios.post('http://158.160.1.0:4004/uploadmedia', form, {
+    const response = await axios.post(`${link}/uploadmedia`, form, {
       timeout: 0 // Убираем таймаут
   });
       console.log('Upload response:', response.data);
@@ -92,7 +94,7 @@ export const deleteMedia = async (fileType, fileName, fileFormat) => {
   const json = { file_type: fileType, file_name: fileName, file_format: fileFormat };
   
   try {
-      const response = await axios.delete('http://158.160.1.0:4004/deletemedia', { data: json });
+      const response = await axios.delete(`${link}/deletemedia`, { data: json });
       console.log('Status code:', response.status);
       console.log(response.data);
       return response.data;
@@ -108,7 +110,7 @@ export const deleteMediaFromTimeline = async (elementId) => {
   };
 
   try {
-    const response = await axios.delete('http://158.160.1.0:4004/deleteelement', { data: jsonData });
+    const response = await axios.delete(`${link}/deleteelement`, { data: jsonData });
     console.log('Deleted element from timeline:', response.data);
     return response.data;
   } catch (error) {
@@ -135,7 +137,7 @@ export const placeElement = async (fileType, fileName, fileFormat, startTime, ti
   console.log("PlaceElement json data",jsonData);
 
   try {
-      const response = await axios.post('http://158.160.1.0:4004/placeelement', jsonData);
+      const response = await axios.post(`${link}/placeelement`, jsonData);
       console.log('Response:', response.data);
       return response.data;
   } catch (error) {
@@ -162,7 +164,7 @@ export const updateElement = async (elementId, newStartTime, timeZone) => {
 
   try {
       // Отправляем PUT запрос на сервер
-      const response = await axios.put('http://158.160.1.0:4004/moveelement', jsonData);
+      const response = await axios.put(`${link}/moveelement`, jsonData);
       console.log('Response:', response.data);
       return response.data;
   } catch (error) {
@@ -178,7 +180,7 @@ export const testPost = async (file) => {
         name: fileName
     };
 
-    const response = await axios.post('http://158.160.1.0:4004/po', jsonData);
+    const response = await axios.post(`${link}/po`, jsonData);
     console.log('Response:', response.data);
   } catch (error) {
       console.error('Error:', error);

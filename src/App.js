@@ -14,7 +14,7 @@ function App() {
     const moment = require('moment-timezone');
 
     const [draggedItem, setDraggedItem] = useState(null);
-    const [items, setItems] = useState([]);
+    const [mediaFiles, setMediaFiles] = useState([]);
     const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]);
     const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
     const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
@@ -30,21 +30,25 @@ function App() {
     const [serverTimezone, setServerTimezone] = useState(null);
     const fileInputRef = useRef(null);
     
-
-  
     const updateMediaFileList = async () => {
       try {
-        const data = await getListOfMediaFiles();
-        const transformedData = data.map(file => ({
-          id: Math.floor(Math.random() * 2147483647),
-          type: file.file_type,
+        const response = await getListOfMediaFiles();
+        const transformedResponse = response.map(file => ({
+          id: crypto.randomUUID(),
           name: `${file.file_name}.${file.file_format}`,
-          duration: file.seconds / 3600,
+          format: file.file_format,
+          duration: (file.seconds || 0) / 3600,
+          valueType: file.value_type,
+          type: file.file_type,
+          refs: Array.isArray(file.refs) && file.refs.length ? file.refs.join(', ') : ''
         }));
-        setItems(transformedData);
+        setMediaFiles(transformedResponse);
       } catch (error) {
-        toast.error('Error fetching media files: ' + error.message);
-        console.error('Error while fetching media files:', error.message);
+        // Show a user-friendly error message
+        toast.error(`Failed to load media files. Please try again later. Error: ${error.message}`);
+    
+        // Log the error details for debugging purposes
+        console.error('An error occurred while fetching media files:', error.message);
       }
     };
   
@@ -330,9 +334,9 @@ function App() {
         <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} /> 
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} multiple onChange={handleFileChange} />
         <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
-        <button className="save-button">Timetable</button>
+        <button className="save-button">Save</button>
         <div className="scrollable-list">
-          {items.map((item) => (
+          {mediaFiles.map((item) => (
             <div className="list-item" key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
               <p style={{ marginLeft: "8px" }}>Name: {item.name}</p>
               <p style={{ marginLeft: "8px" }}>Type: {item.type}</p>
