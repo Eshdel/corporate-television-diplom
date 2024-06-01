@@ -18,20 +18,23 @@ function App() {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]);
   const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
+  const [newElementsOnTimeline, setNewElementsOnTimeline] = useState([]);
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
   const [selectedItem, setSelectedItem] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showTrashBin, setShowTrashBin] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
-  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [fileToConvert, setFileToConvert] = useState(null);
-  const [elementToTimeline, setElementToTimeline] = useState(null);
   const [converting, setConverting] = useState(false);
   const [serverTimezone, setServerTimezone] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false); // Добавим состояние для отображения зоны перетаскивания
   const [activeTab, setActiveTab] = useState('video'); // Добавим состояние для активной вкладки
   const fileInputRef = useRef(null);
+
+  const uploadElements = {
+    // upload to server new elements on timeline
+  }
 
   const updateMediaFileList = async () => {
     try {
@@ -40,7 +43,7 @@ function App() {
         id: crypto.randomUUID(),
         name: `${file.file_name}.${file.file_format}`,
         format: file.file_format,
-        duration: (file.seconds || 0) / 3600,
+        duration: (file.seconds || 600) / 3600,
         valueType: file.value_type,
         type: file.file_type,
         refs: Array.isArray(file.refs) && file.refs.length ? file.refs.join(', ') : ''
@@ -85,6 +88,7 @@ function App() {
           endDateTime: moment(endDate).format('YYYY-MM-DD HH:mm:ss'),
         };
       });
+
       setAllElementsOnTimeline(transformedData);
     } catch (error) {
       toast.error('Error fetching elements on timeline: ' + error.message);
@@ -125,43 +129,40 @@ function App() {
     setShowTrashBin(false);
   };
 
-  const handleDropOnTimeline = async (e, startTime) => {
+  const handleDropOnTimeline = async (e, startTime, transformStartTime) => {
     e.preventDefault();
     setIsDragOver(false);
+
     if (draggedItem) {
-      if (draggedItem.type !== 'video') {
-        toast.error("You need to convert the item to video format first.");
-        return;
-      }
-      setElementToTimeline(draggedItem);
-      setShowScheduleDialog(true);
+      const formattedDateTime = moment(`${selectedDate} ${startTime}`).format('YYYY-MM-DD HH:mm:ss');
+      const newElement = {
+        ...draggedItem,
+        id: allElementsOnTimeline.length + 2,
+        startTime: transformStartTime,
+        startDate: selectedDate,
+        startDateTime: formattedDateTime,
+      };
+      setNewElementsOnTimeline(prevElements => [...prevElements, newElement]);
+      setAllElementsOnTimeline(prevElements => [...prevElements, newElement]);
     }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleSchedule = async (item, startDate, priority) => {
-    setShowScheduleDialog(false);
-
-    const timeZone = moment.tz.guess();
-    try {
-      console.log("Placement args", `${item.type}, ${item.name.split('.')[0]} , ${item.name.split('.')[1]}, ${startDate}, ${timeZone}, ${priority}`);
-      await placeElement(item.type, item.name.split('.')[0], item.name.split('.')[1], startDate, timeZone, priority);
-      toast.success('Element scheduled successfully');
-      updateElementsOnTimeline();
-    } catch (error) {
-      toast.error('Error scheduling element: ' + error.message);
+    // Проверяем, перетаскивается ли файл
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragOver(true);
     }
-    setShowScheduleDialog(false);
-    setDraggedItem(null); // Сброс draggedItem после завершения планирования
   };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    // Проверяем, перетаскивается ли файл
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragOver(false);
+    }
+  };
+
 
   const updateItemStartTime = async (itemId, newStartDate, newStartTime) => {
     try {
@@ -291,19 +292,19 @@ function App() {
           if (repeatDays[currentDate.getDay()] && currentDate.toISOString().substring(0, 10) !== item.startDate) {
             const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
             console.log('Start date str Repeat', startDateStr);
-            await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+            await placeElement(item.type, item.name, item.format, startDateStr, item.priority);
           }
           currentDate.setDate(currentDate.getDate() + 1);
         } else if (frequency === 'weekly') {
           if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
             const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
-            await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+            await placeElement(item.type, item.name, item.format, startDateStr, item.priority);
           }
           currentDate.setDate(currentDate.getDate() + (7 * repeatWeeks));
         } else if (frequency === 'monthly') {
           if (currentDate.toISOString().substring(0, 10) !== item.startDate) {
             const startDateStr = moment(currentDate).tz(timeZone).format(); // Форматируем дату с учетом часового пояса
-            await placeElement(item.type, item.name, item.format, startDateStr, timeZone, item.priority);
+            await placeElement(item.type, item.name, item.format, startDateStr, item.priority);
           }
           currentDate.setMonth(currentDate.getMonth() + repeatMonths);
         }
@@ -320,7 +321,6 @@ function App() {
       updateElementsOnTimeline();
     }
   };
-
 
   const handleConvertClick = (file) => {
     setFileToConvert(file);
@@ -394,7 +394,7 @@ function App() {
         <Timeline
           items={elementsOnTimeline}
           updateItemStartTime={updateItemStartTime}
-          updateItemPriority={updateItemPriority}
+          updateItemDuration={updateItemDuration}
           setSelectedItem={setSelectedItem}
           handleDrop={handleDropOnTimeline}
         />
@@ -423,16 +423,6 @@ function App() {
             setFileToConvert(null);
           }}
           onConvert={handleConvert}
-        />
-      )}
-      {showScheduleDialog && elementToTimeline && (
-        <ScheduleDialog
-          item={elementToTimeline}
-          onClose={() => {
-            setShowScheduleDialog(false);
-            setElementToTimeline(null);
-          }}
-          onSchedule={handleSchedule}
         />
       )}
     </div>

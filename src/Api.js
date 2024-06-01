@@ -119,19 +119,22 @@ export const deleteMediaFromTimeline = async (elementId) => {
   }
 };
 
-export const placeElement = async (fileType, fileName, fileFormat, startTime, timeZone, priority) => {
+export const placeElement = async (fileType, fileName, fileFormat, startTime, seconds, priority) => {
   // Форматируем дату и время начала показа
 
   let formattedDateTime = moment(startTime).format('YYYY-MM-DD HH:mm:ss');
-
+  
+  const timeZone = moment.tz.guess();
+  
   // JSON данные для отправки на сервер
   const jsonData = {
       file_type: fileType,
       file_name: fileName,
       file_format: fileFormat,
       full_start_time: formattedDateTime, // Полная дата и время начала показа
+      seconds: seconds,
       time_zone: timeZone, // Часовой пояс
-      priority: priority // Приоритет
+      priority: priority || 1 // Приоритет
   };
 
   console.log("PlaceElement json data",jsonData);

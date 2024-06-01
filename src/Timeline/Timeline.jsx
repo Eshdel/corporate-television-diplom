@@ -20,7 +20,7 @@ const convertDecimalToTime = (decimalTime) => {
   return formattedTime;
 };
 
-const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedItem, handleDrop, leftPanelItemDrag}) => {
+const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedItem, handleDrop, leftPanelItemDrag}) => {
   const widthLabels = 300;
 
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -35,6 +35,31 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
   const [scale, setScale] = useState(1);
   const [contentWidth, setContentWidth] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      if (itemsContentRef.current) {
+        const rect = itemsContentRef.current.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        setPosition({ x, y });
+      }
+    };
+
+    const element = itemsContentRef.current;
+    if (element) {
+      element.addEventListener('mousemove', handleMouseMove);
+      element.addEventListener('dragover', handleMouseMove);  // Add dragover event to track mouse during drag
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mousemove', handleMouseMove);
+        element.removeEventListener('dragover', handleMouseMove);  // Clean up the dragover event
+      }
+    };
+  }, []);
 
   const getCurrentTime = () => {
     const currentTime = new Date();
@@ -384,7 +409,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemPriority, setSelectedI
   }, []); // Empty dependency array ensures this effect runs only once on mount
 
   return (
-    <div className="timeline-wrapper"  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, getCurrentTime())}>
+    <div className="timeline-wrapper"  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, convertDecimalToTime(position.x / (widthLabels * scale)), position.x / (widthLabels * scale))}>
       <div
         className="time-labels-wrapper"
         onScroll={handleScroll}
