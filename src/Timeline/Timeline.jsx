@@ -1,86 +1,77 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./Timeline.css";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 const convertDecimalToTime = (decimalTime) => {
-  let hours = Math.floor(decimalTime);
-  let minutes = Math.floor((decimalTime - hours) * 60);
-  let seconds = Math.round(((decimalTime - hours) * 60 - minutes) * 60);
+  const hours = Math.floor(decimalTime);
+  const minutes = Math.floor((decimalTime - hours) * 60);
+  const seconds = Math.round(((decimalTime - hours) * 60 - minutes) * 60);
 
-  if (seconds === 60) {
-    seconds = 0;
-    minutes += 1;
-  }
-  if (minutes === 60) {
-    minutes = 0;
-    hours += 1;
-  }
+  const adjustedSeconds = seconds === 60 ? 0 : seconds;
+  const adjustedMinutes = seconds === 60 ? minutes + 1 : minutes;
 
-  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}:${adjustedSeconds.toString().padStart(2, '0')}`;
   return formattedTime;
 };
 
-const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedItem, handleDrop, leftPanelItemDrag}) => {
-  const widthLabels = 300;
+const zoomLevels = [0.5, 1, 2, 6, 18, 72];
+const widthLabels = 300;
 
-  const [scrollPosition, setScrollPosition] = useState(0);
+const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedItem, handleDrop, leftPanelItemDrag }) => {
   const timeLabelsRef = useRef(null);
   const itemsContentRef = useRef(null);
   
+  const [scrollPosition, setScrollPosition] = useState(0);
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedElement, setDraggedElement] = useState(null);
   const [dragStartPosition, setDragStartPosition] = useState(null);
-  const [draggedItemStartTime,setDraggedItemStartTime] = useState(null);
+  const [draggedItemStartTime, setDraggedItemStartTime] = useState(null);
+
+  const [resizingItem, setResizingItem] = useState(null);
+  const [resizeDirection, setResizeDirection] = useState(null);
   
-  const [zoomMod, setZoomMod] = useState(1); // Начальное значение масштаба 1 (обычный масштаб)
-  const [scale, setScale] = useState(1);
+  const [zoomMod, setZoomMod] = useState(1);
+  const [scale, setScale] = useState(zoomLevels[zoomMod]);
   const [contentWidth, setContentWidth] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [calculatedItems, setCalculatedItems] = useState([]);
+
+  const handleMouseMove = useCallback((event) => {
+    if (itemsContentRef.current) {
+      const rect = itemsContentRef.current.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      setPosition({ x, y });
+    }
+  }, []);
 
   useEffect(() => {
-    const handleMouseMove = (event) => {
-      if (itemsContentRef.current) {
-        const rect = itemsContentRef.current.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        setPosition({ x, y });
-      }
-    };
-
     const element = itemsContentRef.current;
     if (element) {
       element.addEventListener('mousemove', handleMouseMove);
-      element.addEventListener('dragover', handleMouseMove);  // Add dragover event to track mouse during drag
+      element.addEventListener('dragover', handleMouseMove);
     }
-
     return () => {
       if (element) {
         element.removeEventListener('mousemove', handleMouseMove);
-        element.removeEventListener('dragover', handleMouseMove);  // Clean up the dragover event
+        element.removeEventListener('dragover', handleMouseMove);
       }
     };
-  }, []);
+  }, [handleMouseMove]);
 
   const getCurrentTime = () => {
     const currentTime = new Date();
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    return hours + (minutes / 60); // Возвращает текущее время в часах с учетом минут
+    return currentTime.getHours() + (currentTime.getMinutes() / 60);
   };
-  
 
-  const handleItemClick = (item) => {
-    setSelectedItem(item); // Вызываем setSelectedItem с выбранным элементом
-  };
+  const handleItemClick = (item) => setSelectedItem(item);
 
   const handleMouseDown = (e, item) => {
-    const currentDateTime = new Date();
-    
-    if (currentDateTime.getTime() > item.startMicroTime) {
+    if (new Date().getTime() > item.startMicroTime) {
       toast.info("The old date and time have already passed");
       return;
     }
-    
     setDraggedItem(item);
     setDraggedElement(e);
     setDragStartPosition({
@@ -90,56 +81,80 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       top: parseFloat(e.target.style.top)
     });
   };
-  
-  const handleMouseMove = (e) => {
-    if (draggedItem) {
-      const deltaX = e.clientX - dragStartPosition.x;
-      const deltaY = e.clientY - dragStartPosition.y;
-      const newLeft = dragStartPosition.left + deltaX;
-      const newTop = dragStartPosition.top + deltaY;
-      //draggedElement.target.style.top = `${newTop}px`;
-      draggedElement.target.style.left = `${newLeft}px`;
 
-      // Вычисляем новое значение startTime
-      let left = newLeft;
-      const indexItem = items.findIndex(item => item.id === draggedItem.id);
-
-      for(let i = 0; i < indexItem; i++) {
-        left += items[i].duration * widthLabels * scale;
-      }
-
-      setDraggedItemStartTime(left / (widthLabels * scale));
-    }
-
-    if(leftPanelItemDrag) {
-      let left = e.clientX;
-
-      for(let i = 0; i < items.length; i++) {
-        left += items[i].duration * widthLabels * scale;
-      }
-      setDraggedItemStartTime(left / (widthLabels * scale));
-    }
-    
+  const handleResizeMouseDown = (e, item, direction) => {
+    e.stopPropagation();
+    setResizingItem(item);
+    setResizeDirection(direction);
+    setDragStartPosition({
+      x: e.clientX,
+      left: item.left,
+      width: item.width,
+    });
   };
 
-  const handleMouseUp = () => {
-    // Обновляем startTime элемента в данных items
-    if(draggedItem && draggedItemStartTime) {
-      const formattedStartTime = convertDecimalToTime(draggedItemStartTime);
-      updateItemStartTime(draggedItem.id, draggedItem.startDate, formattedStartTime);
+  const handleResizeMouseMove = useCallback((e) => {
+    if (resizingItem && resizingItem.type !== 'video') {
+      const deltaX = e.clientX - dragStartPosition.x;
+      let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
+      let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
+
+      if (newWidth < 0) newWidth = 0;
+
+      const index = calculatedItems.findIndex(item => item.id === resizingItem.id);
+      if (resizeDirection === 'right' && index < calculatedItems.length - 1) {
+        const nextItem = calculatedItems[index + 1];
+        if (nextItem) newWidth = Math.min(newWidth, nextItem.left - resizingItem.left);
+      } else if (resizeDirection === 'left' && index > 0) {
+        const prevItem = calculatedItems[index - 1];
+        if (prevItem) {
+          const maxWidth = resizingItem.left - prevItem.left - prevItem.width;
+          newWidth = Math.min(newWidth, maxWidth);
+          newLeft = Math.max(newLeft, prevItem.left + prevItem.width);
+        }
+      }
+
+      updateItemDuration(resizingItem.id, newWidth / (widthLabels * scale));
+      updateItemStartTime(resizingItem.id, resizingItem.startDate, convertDecimalToTime(resizingItem.startTime + (newLeft - resizingItem.left) / (widthLabels * scale)));
+    }
+  }, [calculatedItems, dragStartPosition, resizeDirection, resizingItem, scale, updateItemDuration, updateItemStartTime]);
+
+  const handleResizeMouseUp = () => {
+    setResizingItem(null);
+    setResizeDirection(null);
+    setDragStartPosition(null);
+  };
+
+  const handleMouseMoveDrag = (e) => {
+    if (draggedItem) {
+      const deltaX = e.clientX - dragStartPosition.x;
+      const newLeft = Math.max(0, Math.min(dragStartPosition.left + deltaX, contentWidth - draggedItem.width));
+      draggedElement.target.style.left = `${newLeft}px`;
+
+      let left = newLeft;
+      const indexItem = calculatedItems.findIndex(item => item.id === draggedItem.id);
+
+      for (let i = 0; i < indexItem; i++) {
+        left += calculatedItems[i]?.duration * widthLabels * scale || 0;
+      }
+
+      setDraggedItemStartTime(left / (widthLabels * scale));
     }
 
-    // if(draggedItem)  {
-    //   const parentHeight = draggedElement.target.parentNode.clientHeight;
-    //   const elementHeight = draggedElement.target.clientHeight;
-    //   const level = Math.min(4, Math.max(1, Math.ceil((draggedElement.target.offsetTop + elementHeight / 2) / (parentHeight / 4))));
-    //   const newTop = (level - 1) * (parentHeight / 4);
+    if (leftPanelItemDrag) {
+      let left = e.clientX;
 
-    //   draggedElement.target.style.top = `${newTop}px`;
+      for (let i = 0; i < calculatedItems.length; i++) {
+        left += calculatedItems[i]?.duration * widthLabels * scale || 0;
+      }
+      setDraggedItemStartTime(left / (widthLabels * scale));
+    }
+  };
 
-    //   updateItemPriority(draggedItem.id, level);
-    // }
-    
+  const handleMouseUpDrag = () => {
+    if (draggedItem && draggedItemStartTime) {
+      updateItemStartTime(draggedItem.id, draggedItem.startDate, convertDecimalToTime(draggedItemStartTime));
+    }
     setDraggedElement(null);
     setDraggedItemStartTime(null);
     setDraggedItem(null);
@@ -148,59 +163,31 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
   useEffect(() => {
     const handleMouseUpOutside = () => {
-      if (draggedItem) {
-        setDraggedElement(null);
-        setDraggedItemStartTime(null);
-        setDraggedItem(null);
-        setDragStartPosition(null);
-      }
+      setDraggedElement(null);
+      setDraggedItemStartTime(null);
+      setDraggedItem(null);
+      setResizingItem(null);
+      setResizeDirection(null);
+      setDragStartPosition(null);
     };
 
     window.addEventListener("mouseup", handleMouseUpOutside);
+    window.addEventListener("mousemove", handleResizeMouseMove);
 
     return () => {
       window.removeEventListener("mouseup", handleMouseUpOutside);
+      window.removeEventListener("mousemove", handleResizeMouseMove);
     };
-  }, [draggedItem]);
+  }, [draggedItem, resizingItem, handleResizeMouseMove]);
 
-  const zoomIn = () => {
-    if(zoomMod < 5) {
-      setZoomMod(zoomMod + 1);
-    }
-  };
-  
-  const zoomOut = () => {
-    if (zoomMod > 0) {
-      setZoomMod(zoomMod - 1);
-    }
-  };
+  const zoomIn = () => setZoomMod((prev) => Math.min(prev + 1, zoomLevels.length - 1));
+  const zoomOut = () => setZoomMod((prev) => Math.max(prev - 1, 0));
 
-  const updateScale = () => {
-    switch(zoomMod) {
-      case 0:
-        setScale(0.5);
-        break
-      case 1:
-        setScale(1);
-        break
-      case 2:
-        setScale(2);
-        break
-      case 3:
-        setScale(6);
-        break
-      case 4:
-        setScale(18);
-        break;
-      case 5:
-        setScale(72);
-        break;
-    }
-  };
+  useEffect(() => setScale(zoomLevels[zoomMod]), [zoomMod]);
 
   useEffect(() => {
     let timeoutId;
-  
+
     const handleWheel = (event) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
@@ -209,42 +196,34 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
         } else {
           zoomIn();
         }
-      }, 200); // Установите желаемую задержку здесь (в миллисекундах)
+      }, 200);
     };
-  
+
     window.addEventListener("wheel", handleWheel);
-    
+
     return () => {
       window.removeEventListener("wheel", handleWheel);
       clearTimeout(timeoutId);
     };
   }, [zoomIn, zoomOut]);
-  
 
-  useEffect(() => {
-    updateScale();
-  }, [zoomMod]); // вызываем updateScale при изменении zoomMod
+  const calculateItems = useCallback((items) => {
+    const calculated = items.map((item, index) => {
+      let left = item.startTime * widthLabels * scale;
+      for (let i = 0; i < index; i++) {
+        left -= items[i].duration * widthLabels * scale;
+      }
+      const top = itemsContentRef.current ? (item.priority - 1) * (1188.7 / 4) : 0;
+      return { ...item, left, top, width: item.duration * widthLabels * scale };
+    });
+    setCalculatedItems(calculated);
+  }, [scale]);
 
-  function getItemReact(item, indexItem) {
-    let left = item.startTime * widthLabels * scale; 
-    
-    for(let i = 0; i < indexItem; i++) {
-      left -= items[i].duration * widthLabels * scale
-    }
-    let newTop = 0;
+  useEffect(() => calculateItems(items), [items, scale, calculateItems]);
 
-    if(itemsContentRef && itemsContentRef.current) {
-      newTop = (item.priority - 1) * (1188.7 / 4);
-    }
-    
-    return { ...item, left: left, top: newTop, width: item.duration * widthLabels * scale};    
-  }
-
-  // Обработчик события прокрутки
   const handleScroll = (e) => {
     const { scrollLeft } = e.target;
     setScrollPosition(scrollLeft);
-    // Устанавливаем прокрутку для обоих элементов
     if (timeLabelsRef.current && itemsContentRef.current) {
       timeLabelsRef.current.scrollLeft = scrollLeft;
       itemsContentRef.current.scrollLeft = scrollLeft;
@@ -253,148 +232,38 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
   const generateTimeLabels = () => {
     const labels = [];
-    switch (zoomMod) {
-      case 0:
-        // Режим 0: показываем только часы (0-23)
-        for (let hour = 0; hour < 24; hour++) {
-          labels.push(
-            <div key={hour} className="hour-label" style={{ minWidth: `${widthLabels * scale}px` }}>
-              {hour}:00
-            </div>
-          );
-        }
-        break;
-      case 1:
-        // Режим 1: показываем часы и промежутки по 30 минут между ними
-        for (let hour = 0; hour < 24; hour++) {
-          labels.push(
-            <div key={hour} className="hour-label" style={{ minWidth: `${widthLabels / 2 * scale}px` }}>
-              {hour}:00
-            </div>
-          );
-          labels.push(
-            <div key={`${hour}-30`} className="hour-label" style={{ minWidth: `${widthLabels / 2 * scale}px` }}>
-              {hour}:30
-            </div>
-          );
-        }
-        break;
-      case 2:
-        // Режим 2: показываем часы и промежутки по 15 минут между ними
-        for (let hour = 0; hour < 24; hour++) {
-          for (let minute = 0; minute < 60; minute += 15) {
-            labels.push(
-              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 4 * scale}px` }}>
-                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
-              </div>
-            );
-          }
-        }
-        break;
-      case 3:
-        for (let hour = 0; hour < 24; hour++) {
-          for (let minute = 0; minute < 60; minute += 10) {
-            labels.push(
-              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 6 * scale}px` }}>
-                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
-              </div>
-            );
-          }
-        }
-        break;
+    const stepMinutes = [60, 30, 15, 10, 5, 1][zoomMod];
+    const stepWidth = widthLabels / (60 / stepMinutes) * scale;
 
-      case 4:
-        for (let hour = 0; hour < 24; hour++) {
-          for (let minute = 0; minute < 60; minute += 5) {
-            labels.push(
-              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 12 * scale}px` }}>
-                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
-              </div>
-            );
-          }
-        }
-        break;
-
-      case 5:
-        for (let hour = 0; hour < 24; hour++) {
-          for (let minute = 0; minute < 60; minute += 1) {
-            labels.push(
-              <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${widthLabels / 60 * scale}px` }}>
-                {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
-              </div>
-            );
-          }
-        }
-        break;
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += stepMinutes) {
+        labels.push(
+          <div key={`${hour}-${minute}`} className="hour-label" style={{ minWidth: `${stepWidth}px` }}>
+            {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+          </div>
+        );
+      }
     }
     return labels;
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  function generateItemLabels (items) {
-    const itemsReact = [];
-    
-    for (let i = 0; i < items.length; i++) {
-      const currentItem = getItemReact(items[i], i);
-      
-      // Определяем ширину и левый отступ для текущего элемента
-
-      const itemWidth = parseFloat(currentItem.width); // Преобразуем ширину в число
-      const itemLeft = parseFloat(currentItem.left); // Преобразуем левый отступ в число
-      const itemTop = parseFloat(currentItem.top);
-      // Создаём элемент React для текущего элемента
-      const itemElement = (
-        <div 
-          key={currentItem.id} 
-          className="item" 
-          style={{overflow: 'hidden', minWidth: `${itemWidth}px`, height: `20%`,  left: `${itemLeft}px`, top:`${itemTop}px`, position: "relative"}}
-          onMouseDown={(e) => handleMouseDown(e, currentItem)}
-          onClick={() => handleItemClick(items[i])} // Добавляем обработчик клика
-        >
-        </div>);
-  
-      itemsReact.push(itemElement); // Добавляем текущий элемент в список
-  
-    }
-  
-    return itemsReact;
-  }
-
-  const updateContentWidth = () => {
-    if (timeLabelsRef.current) {
-      switch(zoomMod) {
-        case 0:
-          setContentWidth(3600);
-          break;
-        case 1:
-          setContentWidth(7200); // 30
-          break;
-        case 2:
-          setContentWidth(14400); // 15
-          break;
-        case 3:
-          setContentWidth(43200); // 10
-          break;
-        case 4:
-          setContentWidth(129600); // 5
-          break;
-        case 5:
-          setContentWidth(518400); // 1
-          break;
-      }
-    }
-  };
+  const generateItemLabels = () => calculatedItems.map((item) => (
+    <div
+      key={item.id}
+      className="item"
+      style={{ overflow: 'hidden', minWidth: `${item.width}px`, height: `20%`, left: `${item.left}px`, top: `${item.top}px`, position: "relative" }}
+      onMouseDown={(e) => handleMouseDown(e, item)}
+      onClick={() => handleItemClick(item)}
+    >
+      <div className="resize-handle resize-handle-left" onMouseDown={(e) => handleResizeMouseDown(e, item, 'left')} />
+      <div className="resize-handle resize-handle-right" onMouseDown={(e) => handleResizeMouseDown(e, item, 'right')} />
+    </div>
+  ));
 
   useEffect(() => {
-    updateContentWidth();
+    const widths = [3600, 7200, 14400, 43200, 129600, 518400];
+    setContentWidth(widths[zoomMod]);
   }, [zoomMod]);
-
-  useEffect(() => {
-    updateContentWidth();
-  }, []);
 
   useEffect(() => {
     const scrollToCurrentTime = () => {
@@ -406,27 +275,15 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       }
     };
     scrollToCurrentTime();
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+  }, [scale]);
 
   return (
-    <div className="timeline-wrapper"  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, convertDecimalToTime(position.x / (widthLabels * scale)), position.x / (widthLabels * scale))}>
-      <div
-        className="time-labels-wrapper"
-        onScroll={handleScroll}
-        ref={timeLabelsRef}
-        style={{ width: `${contentWidth}px`}}
-      >
+    <div className="timeline-wrapper" onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, convertDecimalToTime(position.x / (widthLabels * scale)), position.x / (widthLabels * scale))}>
+      <div className="time-labels-wrapper" onScroll={handleScroll} ref={timeLabelsRef} style={{ width: `${contentWidth}px` }}>
         {generateTimeLabels()}
       </div>
-      <div
-        className="items-content-wrapper"
-        onScroll={handleScroll}
-        ref={itemsContentRef}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        style={{ width: `${contentWidth}px`}}
-      >
-        {generateItemLabels(items)}
+      <div className="items-content-wrapper" onScroll={handleScroll} ref={itemsContentRef} onMouseMove={handleMouseMoveDrag} onMouseUp={handleMouseUpDrag} style={{ width: `${contentWidth}px` }}>
+        {generateItemLabels()}
       </div>
     </div>
   );

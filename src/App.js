@@ -141,7 +141,8 @@ function App() {
         startTime: transformStartTime,
         startDate: selectedDate,
         startDateTime: formattedDateTime,
-      };
+      };      
+      
       setNewElementsOnTimeline(prevElements => [...prevElements, newElement]);
       setAllElementsOnTimeline(prevElements => [...prevElements, newElement]);
     }
@@ -171,9 +172,9 @@ function App() {
       console.log('newStartDate', newStartDate);
       console.log('New date Time', newDateTime);
       const timeZone = moment.tz.guess(); // Используйте нужный часовой пояс
-      await updateElement(itemId, newDateTime, timeZone);
+      // await updateElement(itemId, newDateTime, timeZone);
       toast.success('Element start time updated successfully');
-      updateElementsOnTimeline(); // Вызов функции обновления элементов на временной линии
+      // updateElementsOnTimeline(); // Вызов функции обновления элементов на временной линии
     } catch (error) {
       toast.error('Error updating element start time: ' + error.response.data);
     }

@@ -36,3 +36,20 @@
     background: linear-gradient(to right, #5c6bc0, #512da8);
     border-radius: 20px;
 }
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: ew-resize;
+    z-index: 10;
+  }
+  
+  .resize-handle-left {
+    left: 0;
+  }
+  
+  .resize-handle-right {
+    right: 0;
+  }
