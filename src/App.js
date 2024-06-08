@@ -165,20 +165,14 @@ function App() {
   };
 
 
-  const updateItemStartTime = async (itemId, newStartDate, newStartTime) => {
-    try {
-      console.log('newStartTime', newStartTime);
-      const newDateTime = moment(`${newStartDate} ${newStartTime}`, 'YYYY-MM-DD HH:mm:ss');
-      console.log('newStartDate', newStartDate);
-      console.log('New date Time', newDateTime);
-      const timeZone = moment.tz.guess(); // Используйте нужный часовой пояс
-      // await updateElement(itemId, newDateTime, timeZone);
-      toast.success('Element start time updated successfully');
-      // updateElementsOnTimeline(); // Вызов функции обновления элементов на временной линии
-    } catch (error) {
-      toast.error('Error updating element start time: ' + error.response.data);
-    }
+  const updateItemStartTime = (itemId, newStartDate, newStartTime) => {
+    setAllElementsOnTimeline(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, startDate: newStartDate, startTime: newStartTime } : item
+      )
+    );
   };
+  
   const updateItemDuration = (itemId, newDuration) => {
     setAllElementsOnTimeline(prevItems => prevItems.map(item =>
       item.id === itemId ? { ...item, duration: newDuration } : item

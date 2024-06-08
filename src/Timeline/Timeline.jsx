@@ -30,6 +30,8 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
   const [resizingItem, setResizingItem] = useState(null);
   const [resizeDirection, setResizeDirection] = useState(null);
+  const [visualWidth, setVisualWidth] = useState(null);
+  const [visualLeft, setVisualLeft] = useState(null);
   
   const [zoomMod, setZoomMod] = useState(1);
   const [scale, setScale] = useState(zoomLevels[zoomMod]);
@@ -68,10 +70,6 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   const handleItemClick = (item) => setSelectedItem(item);
 
   const handleMouseDown = (e, item) => {
-    if (new Date().getTime() > item.startMicroTime) {
-      toast.info("The old date and time have already passed");
-      return;
-    }
     setDraggedItem(item);
     setDraggedElement(e);
     setDragStartPosition({
@@ -114,14 +112,30 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
         }
       }
 
-      updateItemDuration(resizingItem.id, newWidth / (widthLabels * scale));
-      updateItemStartTime(resizingItem.id, resizingItem.startDate, convertDecimalToTime(resizingItem.startTime + (newLeft - resizingItem.left) / (widthLabels * scale)));
+      setVisualWidth(newWidth);
+      setVisualLeft(newLeft);
     }
-  }, [calculatedItems, dragStartPosition, resizeDirection, resizingItem, scale, updateItemDuration, updateItemStartTime]);
+  }, [calculatedItems, dragStartPosition, resizeDirection, resizingItem]);
 
-  const handleResizeMouseUp = () => {
+  const handleMouseUp = () => {
+    if (resizingItem && visualWidth !== null && visualLeft !== null) {
+      const newDuration = visualWidth / (widthLabels * scale);
+      const newStartTime = resizingItem.startTime + (visualLeft - resizingItem.left) / (widthLabels * scale);
+      console.log("resize start time", newStartTime);
+      updateItemDuration(resizingItem.id, newDuration);
+      updateItemStartTime(resizingItem.id, resizingItem.startDate, newStartTime);
+    }
     setResizingItem(null);
     setResizeDirection(null);
+    setVisualWidth(null);
+    setVisualLeft(null);
+
+    if (draggedItem && draggedItemStartTime) {
+      updateItemStartTime(draggedItem.id, draggedItem.startDate, draggedItemStartTime);
+    }
+    setDraggedElement(null);
+    setDraggedItemStartTime(null);
+    setDraggedItem(null);
     setDragStartPosition(null);
   };
 
@@ -151,34 +165,15 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
     }
   };
 
-  const handleMouseUpDrag = () => {
-    if (draggedItem && draggedItemStartTime) {
-      updateItemStartTime(draggedItem.id, draggedItem.startDate, convertDecimalToTime(draggedItemStartTime));
-    }
-    setDraggedElement(null);
-    setDraggedItemStartTime(null);
-    setDraggedItem(null);
-    setDragStartPosition(null);
-  };
-
   useEffect(() => {
-    const handleMouseUpOutside = () => {
-      setDraggedElement(null);
-      setDraggedItemStartTime(null);
-      setDraggedItem(null);
-      setResizingItem(null);
-      setResizeDirection(null);
-      setDragStartPosition(null);
-    };
-
-    window.addEventListener("mouseup", handleMouseUpOutside);
+    window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("mousemove", handleResizeMouseMove);
 
     return () => {
-      window.removeEventListener("mouseup", handleMouseUpOutside);
+      window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("mousemove", handleResizeMouseMove);
     };
-  }, [draggedItem, resizingItem, handleResizeMouseMove]);
+  }, [handleResizeMouseMove]);
 
   const zoomIn = () => setZoomMod((prev) => Math.min(prev + 1, zoomLevels.length - 1));
   const zoomOut = () => setZoomMod((prev) => Math.max(prev - 1, 0));
@@ -251,7 +246,14 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
     <div
       key={item.id}
       className="item"
-      style={{ overflow: 'hidden', minWidth: `${item.width}px`, height: `20%`, left: `${item.left}px`, top: `${item.top}px`, position: "relative" }}
+      style={{
+        overflow: 'hidden',
+        minWidth: `${item.id === resizingItem?.id && visualWidth !== null ? visualWidth : item.width}px`,
+        height: `20%`,
+        left: `${item.id === resizingItem?.id && visualLeft !== null ? visualLeft : item.left}px`,
+        top: `${item.top}px`,
+        position: "relative"
+      }}
       onMouseDown={(e) => handleMouseDown(e, item)}
       onClick={() => handleItemClick(item)}
     >
@@ -282,7 +284,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       <div className="time-labels-wrapper" onScroll={handleScroll} ref={timeLabelsRef} style={{ width: `${contentWidth}px` }}>
         {generateTimeLabels()}
       </div>
-      <div className="items-content-wrapper" onScroll={handleScroll} ref={itemsContentRef} onMouseMove={handleMouseMoveDrag} onMouseUp={handleMouseUpDrag} style={{ width: `${contentWidth}px` }}>
+      <div className="items-content-wrapper" onScroll={handleScroll} ref={itemsContentRef} onMouseMove={handleMouseMoveDrag} onMouseUp={handleMouseUp} style={{ width: `${contentWidth}px` }}>
         {generateItemLabels()}
       </div>
     </div>
