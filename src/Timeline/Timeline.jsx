@@ -18,10 +18,10 @@ const convertDecimalToTime = (decimalTime) => {
 const zoomLevels = [0.5, 1, 2, 6, 18, 72];
 const widthLabels = 300;
 
-const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedItem, handleDrop, leftPanelItemDrag }) => {
+const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedItem, handleDrop }) => {
   const timeLabelsRef = useRef(null);
   const itemsContentRef = useRef(null);
-  
+
   const [scrollPosition, setScrollPosition] = useState(0);
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedElement, setDraggedElement] = useState(null);
@@ -30,9 +30,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
   const [resizingItem, setResizingItem] = useState(null);
   const [resizeDirection, setResizeDirection] = useState(null);
-  const [visualWidth, setVisualWidth] = useState(null);
-  const [visualLeft, setVisualLeft] = useState(null);
-  
+
   const [zoomMod, setZoomMod] = useState(1);
   const [scale, setScale] = useState(zoomLevels[zoomMod]);
   const [contentWidth, setContentWidth] = useState(0);
@@ -92,31 +90,37 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   };
 
   const handleResizeMouseMove = useCallback((e) => {
-    if (resizingItem && resizingItem.type !== 'video') {
+    if (resizingItem) {
       const deltaX = e.clientX - dragStartPosition.x;
       let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
       let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
 
       if (newWidth < 0) newWidth = 0;
 
-      setVisualWidth(newWidth);
-      setVisualLeft(newLeft);
-
+      setCalculatedItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === resizingItem.id
+            ? { ...item, left: newLeft, width: newWidth }
+            : item
+        )
+      );
     }
-  }, [calculatedItems, dragStartPosition, resizeDirection, resizingItem]);
+  }, [dragStartPosition, resizeDirection, resizingItem]);
 
   const handleMouseUp = () => {
-    if (resizingItem && visualWidth !== null && visualLeft !== null) {
-      const newDuration = visualWidth / (widthLabels * scale);
-      const newStartTime = resizingItem.startTime + (visualLeft - resizingItem.left) / (widthLabels * scale);
-    
-      updateItemDuration(resizingItem.id, newDuration);
-      updateItemStartTime(resizingItem.id, resizingItem.startDate, newStartTime);
+    if (resizingItem) {
+      const resizedItem = calculatedItems.find(item => item.id === resizingItem.id);
+      if (resizedItem) {
+        const newDuration = resizedItem.width / (widthLabels * scale);
+        const newStartTime = resizedItem.startTime + (resizedItem.left - resizingItem.left) / (widthLabels * scale);
+
+        updateItemDuration(resizedItem.id, newDuration);
+        updateItemStartTime(resizedItem.id, resizingItem.startDate, newStartTime);
+      }
     }
+
     setResizingItem(null);
     setResizeDirection(null);
-    setVisualWidth(null);
-    setVisualLeft(null);
 
     if (draggedItem && draggedItemStartTime) {
       updateItemStartTime(draggedItem.id, draggedItem.startDate, draggedItemStartTime);
@@ -140,15 +144,6 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
         left += calculatedItems[i]?.duration * widthLabels * scale || 0;
       }
 
-      setDraggedItemStartTime(left / (widthLabels * scale));
-    }
-
-    if (leftPanelItemDrag) {
-      let left = e.clientX;
-
-      for (let i = 0; i < calculatedItems.length; i++) {
-        left += calculatedItems[i]?.duration * widthLabels * scale || 0;
-      }
       setDraggedItemStartTime(left / (widthLabels * scale));
     }
   };
@@ -233,12 +228,13 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   const generateItemLabels = () => calculatedItems.map((item) => (
     <div
       key={item.id}
+      id={`item-${item.id}`}
       className="item"
       style={{
         overflow: 'hidden',
-        minWidth: `${item.id === resizingItem?.id && visualWidth !== null ? visualWidth : item.width}px`,
+        minWidth: `${item.width}px`,
         height: `20%`,
-        left: `${item.id === resizingItem?.id && visualLeft !== null ? visualLeft : item.left}px`,
+        left: `${item.left}px`,
         top: `${item.top}px`,
         position: "relative"
       }}
