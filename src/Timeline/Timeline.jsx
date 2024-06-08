@@ -90,7 +90,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   };
 
   const handleResizeMouseMove = useCallback((e) => {
-    if (resizingItem) {
+    if (resizingItem && resizingItem.type != 'video') {
       const deltaX = e.clientX - dragStartPosition.x;
       let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
       let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
