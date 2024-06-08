@@ -99,21 +99,9 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
       if (newWidth < 0) newWidth = 0;
 
-      const index = calculatedItems.findIndex(item => item.id === resizingItem.id);
-      if (resizeDirection === 'right' && index < calculatedItems.length - 1) {
-        const nextItem = calculatedItems[index + 1];
-        if (nextItem) newWidth = Math.min(newWidth, nextItem.left - resizingItem.left);
-      } else if (resizeDirection === 'left' && index > 0) {
-        const prevItem = calculatedItems[index - 1];
-        if (prevItem) {
-          const maxWidth = resizingItem.left - prevItem.left - prevItem.width;
-          newWidth = Math.min(newWidth, maxWidth);
-          newLeft = Math.max(newLeft, prevItem.left + prevItem.width);
-        }
-      }
-
       setVisualWidth(newWidth);
       setVisualLeft(newLeft);
+
     }
   }, [calculatedItems, dragStartPosition, resizeDirection, resizingItem]);
 
@@ -121,7 +109,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
     if (resizingItem && visualWidth !== null && visualLeft !== null) {
       const newDuration = visualWidth / (widthLabels * scale);
       const newStartTime = resizingItem.startTime + (visualLeft - resizingItem.left) / (widthLabels * scale);
-      console.log("resize start time", newStartTime);
+    
       updateItemDuration(resizingItem.id, newDuration);
       updateItemStartTime(resizingItem.id, resizingItem.startDate, newStartTime);
     }
