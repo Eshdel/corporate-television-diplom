@@ -115,7 +115,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
         const newStartTime = resizedItem.startTime + (resizedItem.left - resizingItem.left) / (widthLabels * scale);
 
         updateItemDuration(resizedItem.id, newDuration);
-        updateItemStartTime(resizedItem.id, resizingItem.startDate, newStartTime);
+        updateItemStartTime(resizedItem.id, resizedItem.startDate, newStartTime);
       }
     }
 
@@ -186,10 +186,11 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   }, [zoomIn, zoomOut]);
 
   const calculateItems = useCallback((items) => {
-    const calculated = items.map((item, index) => {
+    const sortedItems = [...items].sort((a, b) => a.startTime - b.startTime);
+    const calculated = sortedItems.map((item, index) => {
       let left = item.startTime * widthLabels * scale;
       for (let i = 0; i < index; i++) {
-        left -= items[i].duration * widthLabels * scale;
+        left -= sortedItems[i].duration * widthLabels * scale;
       }
       const top = itemsContentRef.current ? (item.priority - 1) * (1188.7 / 4) : 0;
       return { ...item, left, top, width: item.duration * widthLabels * scale };
