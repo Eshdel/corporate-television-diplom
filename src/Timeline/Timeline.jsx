@@ -95,7 +95,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
       let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
 
-      if (newWidth < 0) newWidth = 0;
+      if (newWidth < 0) newWidth = 10;
 
       setCalculatedItems((prevItems) =>
         prevItems.map((item) =>
@@ -113,26 +113,105 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       if (resizedItem) {
         const newDuration = resizedItem.width / (widthLabels * scale);
         const newStartTime = resizedItem.startTime + (resizedItem.left - resizingItem.left) / (widthLabels * scale);
-
+  
         updateItemDuration(resizedItem.id, newDuration);
         updateItemStartTime(resizedItem.id, resizedItem.startDate, newStartTime);
+
+        // Логика для корректировки наложения элементов
+        const updatedItems = [...calculatedItems];
+        updatedItems.forEach((item, index) => {
+          if (item.id !== resizingItem.id) {
+            const isOverlap = (
+              (item.startTime > newStartTime  && newStartTime + newDuration > item.startTime) ||
+              (item.startTime < newStartTime && item.startTime + item.duration > newStartTime)
+            );
+
+            if (isOverlap) {
+              if (newStartTime < item.startTime) {
+                const otherItemStartTime = newStartTime + newDuration;
+                item.startTime = otherItemStartTime;
+                updateItemStartTime(item.id, item.startDate, otherItemStartTime);
+
+                let left = otherItemStartTime * widthLabels * scale;
+                const indexItem = calculatedItems.findIndex(_item => _item.id === item.id);
+                for (let i = 0; i < indexItem; i++) {
+                  left -= calculatedItems[i]?.duration * widthLabels * scale || 0;
+                }
+
+                document.getElementById(`item-${item.id}`).style.left = `${left}px`;
+              } else {
+                const newItemStartTime = item.startTime + item.duration;
+                resizedItem.startTime = newItemStartTime;
+                
+                let left = newItemStartTime * widthLabels * scale;
+                const indexItem = calculatedItems.findIndex(_item => _item.id === item.id);
+                for (let i = 0; i < indexItem; i++) {
+                  left -= calculatedItems[i]?.duration * widthLabels * scale || 0;
+                }
+
+                document.getElementById(`item-${resizingItem.id}`).style.left = `${left}px`;
+                updateItemStartTime(resizedItem.id, resizedItem.startDate, newItemStartTime);
+              }
+            }
+          }
+        });
       }
     }
-
+  
     setResizingItem(null);
     setResizeDirection(null);
+  
+    if (draggedItem && draggedItemStartTime !== null) {
+      let newStartTime = draggedItemStartTime; // Локальная переменная для хранения нового времени начала
+  
+      // Логика для корректировки наложения элементов
+      const updatedItems = [...calculatedItems];
+      updatedItems.forEach((item, index) => {
+        if (item.id !== draggedItem.id) {
+          const isOverlap = (
+            (item.startTime < newStartTime && item.startTime + item.duration > newStartTime) ||
+            (item.startTime > newStartTime && newStartTime + draggedItem.duration > item.startTime)
+          );
+  
+          if (isOverlap) {
+            if (newStartTime > item.startTime) {
+              newStartTime = item.startTime + item.duration;
+            }
+            else {
+              const otherItemStartTime = newStartTime + draggedItem.duration;
+              item.startTime = otherItemStartTime;
+              let left = otherItemStartTime * widthLabels * scale;
+              const indexItem = calculatedItems.findIndex(_item => _item.id === item.id);
+              for (let i = 0; i < indexItem; i++) {
+                left -= calculatedItems[i]?.duration * widthLabels * scale || 0;
+              }
 
-    if (draggedItem && draggedItemStartTime) {
-      updateItemStartTime(draggedItem.id, draggedItem.startDate, draggedItemStartTime);
+              document.getElementById(`item-${item.id}`).style.left = `${left}px`;
+              updateItemStartTime(item.id, item.startDate, otherItemStartTime);
+          }
+          }
+        }
+      });
+
+      let left = newStartTime * widthLabels * scale;
+      const indexItem = calculatedItems.findIndex(item => item.id === draggedItem.id);
+      for (let i = 0; i < indexItem; i++) {
+        left -= calculatedItems[i]?.duration * widthLabels * scale || 0;
+      }
+
+      draggedElement.target.style.left = `${left}px`;
+      updateItemStartTime(draggedItem.id, draggedItem.startDate, newStartTime); // Использование локальной переменной
     }
+  
     setDraggedElement(null);
     setDraggedItemStartTime(null);
     setDraggedItem(null);
     setDragStartPosition(null);
   };
-
+  
   const handleMouseMoveDrag = (e) => {
     if (draggedItem) {
+      console.log("draggg");
       const deltaX = e.clientX - dragStartPosition.x;
       const newLeft = Math.max(0, Math.min(dragStartPosition.left + deltaX, contentWidth - draggedItem.width));
       draggedElement.target.style.left = `${newLeft}px`;
@@ -196,6 +275,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       return { ...item, left, top, width: item.duration * widthLabels * scale };
     });
     setCalculatedItems(calculated);
+    console.log('calculate items');
   }, [scale]);
 
   useEffect(() => calculateItems(items), [items, scale, calculateItems]);
