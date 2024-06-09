@@ -5,9 +5,7 @@ import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
-import { getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, convertToVideo, deleteMedia, deleteMediaFromTimeline, updateElement } from "./Api";
-import ConvertDialog from "./ConvertDialog/ConvertDialog"; // Импортируем новый компонент
-import ScheduleDialog from "./ScheduleDialog/ScheduleDialog";
+import { getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, deleteMedia, deleteMediaFromTimeline, updateElement } from "./Api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -43,11 +41,12 @@ function App() {
         id: crypto.randomUUID(),
         name: `${file.file_name}.${file.file_format}`,
         format: file.file_format,
-        duration: (file.seconds || 600) / 3600,
+        duration: (file.seconds || 60) / 3600,
         valueType: file.value_type,
         type: file.file_type,
         refs: Array.isArray(file.refs) && file.refs.length ? file.refs.join(', ') : ''
       }));
+      console.log("Uploaded mediaFiles from server",transformedResponse);
       setMediaFiles(transformedResponse);
     } catch (error) {
       // Show a user-friendly error message
@@ -176,12 +175,6 @@ function App() {
   const updateItemDuration = (itemId, newDuration) => {
     setAllElementsOnTimeline(prevItems => prevItems.map(item =>
       item.id === itemId ? { ...item, duration: newDuration } : item
-    ));
-  };
-
-  const updateItemPriority = (itemId, newPriority) => {
-    setAllElementsOnTimeline(prevItems => prevItems.map(item =>
-      item.id === itemId ? { ...item, priority: newPriority } : item
     ));
   };
 
@@ -317,25 +310,6 @@ function App() {
     }
   };
 
-  const handleConvertClick = (file) => {
-    setFileToConvert(file);
-    setShowConvertDialog(true);
-  };
-
-  const handleConvert = async (file, name, format, duration) => {
-    try {
-      setConverting(true); // Устанавливаем состояние converting в true перед началом конвертации
-      await convertToVideo(file.type, file.name.split('.')[0], file.name.split('.')[1], name, format, duration);
-      updateMediaFileList();
-      toast.success('File converted successfully');
-    } catch (error) {
-      toast.error(error.response.data);
-    } finally {
-      setConverting(false); // Устанавливаем состояние converting в false после завершения конвертации (включая ошибку)
-    }
-    setShowConvertDialog(false);
-  };
-
   const renderMediaFiles = () => {
     return mediaFiles
       .filter(item => item.type === activeTab)
@@ -409,16 +383,6 @@ function App() {
           <button onClick={confirmDelete}>Yes</button>
           <button onClick={cancelDelete}>No</button>
         </div>
-      )}
-      {showConvertDialog && fileToConvert && !converting && (
-        <ConvertDialog
-          file={fileToConvert}
-          onClose={() => {
-            setShowConvertDialog(false);
-            setFileToConvert(null);
-          }}
-          onConvert={handleConvert}
-        />
       )}
     </div>
   );
