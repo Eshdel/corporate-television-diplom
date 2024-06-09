@@ -345,7 +345,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   }, [scale]);
 
   return (
-    <div className="timeline-wrapper" onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, convertDecimalToTime(position.x / (widthLabels * scale)), position.x / (widthLabels * scale))}>
+    <div className="timeline-wrapper" onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, position.x / (widthLabels * scale))}>
       <div className="time-labels-wrapper" onScroll={handleScroll} ref={timeLabelsRef} style={{ width: `${contentWidth}px` }}>
         {generateTimeLabels()}
       </div>

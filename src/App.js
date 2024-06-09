@@ -9,6 +9,22 @@ import { getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeEl
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+const convertDecimalToTime = (decimalTime) => {
+  const hours = Math.floor(decimalTime);
+  const minutes = Math.floor((decimalTime - hours) * 60);
+  const seconds = Math.round(((decimalTime - hours) * 60 - minutes) * 60);
+
+  const adjustedSeconds = seconds === 60 ? 0 : seconds;
+  const adjustedMinutes = seconds === 60 ? minutes + 1 : minutes;
+
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}:${adjustedSeconds.toString().padStart(2, '0')}`;
+  return formattedTime;
+};
+
+function generateRandomId(min = 1000, max = 10000000) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function App() {
   const moment = require('moment-timezone');
 
@@ -17,6 +33,8 @@ function App() {
   const [allElementsOnTimeline, setAllElementsOnTimeline] = useState([]);
   const [elementsOnTimeline, setElementsOnTimeline] = useState([]);
   const [newElementsOnTimeline, setNewElementsOnTimeline] = useState([]);
+  const [startTimeChanges, setStartTimeChanges] = useState([]);
+  const [durationChanges, setDurationChanges] = useState([]);
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
   const [selectedItem, setSelectedItem] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -39,14 +57,14 @@ function App() {
       const response = await getListOfMediaFiles();
       const transformedResponse = response.map(file => ({
         id: crypto.randomUUID(),
-        name: `${file.file_name}.${file.file_format}`,
+        name: `${file.file_name}`,
         format: file.file_format,
         duration: (file.seconds || 60) / 3600,
         valueType: file.value_type,
         type: file.file_type,
         refs: Array.isArray(file.refs) && file.refs.length ? file.refs.join(', ') : ''
       }));
-      console.log("Uploaded mediaFiles from server",transformedResponse);
+      console.log("Uploaded mediaFiles from server", transformedResponse);
       setMediaFiles(transformedResponse);
     } catch (error) {
       // Show a user-friendly error message
@@ -128,21 +146,21 @@ function App() {
     setShowTrashBin(false);
   };
 
-  const handleDropOnTimeline = async (e, startTime, transformStartTime) => {
+  const handleDropOnTimeline = async (e, _startTime) => {
     e.preventDefault();
     setIsDragOver(false);
 
     if (draggedItem) {
-      const formattedDateTime = moment(`${selectedDate} ${startTime}`).format('YYYY-MM-DD HH:mm:ss');
+      const formattedDateTime = moment(`${selectedDate} ${convertDecimalToTime(_startTime)}`).format('YYYY-MM-DD HH:mm:ss');
       const newElement = {
         ...draggedItem,
-        id: allElementsOnTimeline.length + 2,
-        startTime: transformStartTime,
+        id: generateRandomId(),
+        startTime: _startTime,
         startDate: selectedDate,
         startDateTime: formattedDateTime,
-      };      
-      
-      setNewElementsOnTimeline(prevElements => [...prevElements, newElement]);
+      };
+
+      setNewElementsOnTimeline(prevIds => [...prevIds, newElement.id]);
       setAllElementsOnTimeline(prevElements => [...prevElements, newElement]);
     }
   };
@@ -163,19 +181,30 @@ function App() {
     }
   };
 
-
   const updateItemStartTime = (itemId, newStartDate, newStartTime) => {
     setAllElementsOnTimeline(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, startDate: newStartDate, startTime: newStartTime } : item
       )
     );
+    setStartTimeChanges(prevIds => {
+      if (!prevIds.includes(itemId) && !newElementsOnTimeline.includes(itemId)) {
+        return [...prevIds, itemId];
+      }
+      return prevIds;
+    });
   };
-  
+
   const updateItemDuration = (itemId, newDuration) => {
     setAllElementsOnTimeline(prevItems => prevItems.map(item =>
       item.id === itemId ? { ...item, duration: newDuration } : item
     ));
+    setDurationChanges(prevIds => {
+      if (!prevIds.includes(itemId) && !newElementsOnTimeline.includes(itemId)) {
+        return [...prevIds, itemId];
+      }
+      return prevIds;
+    });
   };
 
   const deleteItemFromTimeline = async () => {
@@ -310,6 +339,62 @@ function App() {
     }
   };
 
+  const saveChanges = async () => {
+    try {
+      // Сначала обрабатываем новые элементы
+      for (const newElementId of newElementsOnTimeline) {
+        const newElement = allElementsOnTimeline.find(item => item.id === newElementId);
+        if (newElement) {
+          await placeElement(
+            newElement.type,
+            newElement.name,
+            newElement.format,
+            newElement.startDateTime,
+            newElement.duration * 3600,
+            newElement.priority
+          );
+        }
+      }
+      setNewElementsOnTimeline([]);
+
+      // Затем обрабатываем изменения длительности
+      for (const durationChangeId of durationChanges) {
+        const modifiedElement = allElementsOnTimeline.find(item => item.id === durationChangeId);
+        if (modifiedElement) {
+          console.log('Processing modified element duration:', modifiedElement);
+          await deleteMediaFromTimeline(modifiedElement.id);
+          await placeElement(
+            modifiedElement.type,
+            modifiedElement.name,
+            modifiedElement.format,
+            modifiedElement.startDateTime,
+            modifiedElement.duration * 3600,
+            modifiedElement.priority
+          );
+        }
+      }
+      setDurationChanges([]);
+
+      // Затем обрабатываем изменения времени начала
+      for (const startTimeChangeId of startTimeChanges) {
+        const modifiedElement = allElementsOnTimeline.find(item => item.id === startTimeChangeId);
+        if (modifiedElement) {
+          const newStartDateTime = moment(`${modifiedElement.startDate} ${convertDecimalToTime(modifiedElement.startTime)}`, 'YYYY-MM-DD HH:mm:ss');
+          const timeZone = moment.tz.guess();
+          console.log('Updating element start time:', modifiedElement.id, newStartDateTime, timeZone);
+          await updateElement(modifiedElement.id, newStartDateTime, timeZone);
+        }
+      }
+      setStartTimeChanges([]);
+
+      toast.success('Changes saved successfully');
+      updateElementsOnTimeline();
+    } catch (error) {
+      toast.error(`Error saving changes: ${error.response.data}`);
+      console.error('Error saving changes:', error);
+    }
+  };
+
   const renderMediaFiles = () => {
     return mediaFiles
       .filter(item => item.type === activeTab)
@@ -338,7 +423,7 @@ function App() {
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} multiple onChange={handleFileChange} />
         <div className="buttons-container">
           <button className="upload-button" onClick={handleUploadClick}>Upload file</button>
-          <button className="save-button">Save</button>
+          <button className="save-button" onClick={saveChanges}>Save</button>
         </div>
         <div className="tabs">
           <button className={`tab video ${activeTab === 'video' ? 'active' : ''}`} onClick={() => setActiveTab('video')}>

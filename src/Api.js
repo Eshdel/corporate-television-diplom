@@ -32,36 +32,6 @@ export const getListOfMediaOnTimeline = async () => {
   }
 };
 
-export const convertToVideo = async (fileType, fileName, fileFormat, toFileName, toFileFormat, duration) => {
-  try {
-    const requestData = [
-      {
-        file_type: fileType,
-        file_name: fileName,
-        file_format: fileFormat,
-      },
-      {
-        file_type: 'video',
-        file_name: toFileName,
-        file_format: toFileFormat, // допустим, мы всегда конвертируем в mp4
-      },
-      {
-        seconds: duration,
-      },
-    ];
-
-    const response = await axios.put(`${link}/tovideo`, requestData, {
-      timeout: 0 // Убираем таймаут
-  });
-    console.log('Response Convert:', response);
-    return response;
-  } catch (error) {
-    console.error('Error:', error);
-    throw error;
-  }
-};
-
-  
 export const uploadMediaFile = async (file) => {
   console.log("Begin upload media");
   const form = new FormData();
@@ -168,24 +138,10 @@ export const updateElement = async (elementId, newStartTime, timeZone) => {
   try {
       // Отправляем PUT запрос на сервер
       const response = await axios.put(`${link}/moveelement`, jsonData);
-      console.log('Response:', response.data);
+      console.log('UpdateElement Response:', response.data);
       return response.data;
   } catch (error) {
-      console.error('Error:', error.response.data);
+      console.error('updateElement Error:', error.response.data);
       throw error;
   }
 };
-
-export const testPost = async (file) => {
-  const fileName = file.name.split('.').slice(0, -1).join('.');
-  try {
-    const jsonData = {
-        name: fileName
-    };
-
-    const response = await axios.post(`${link}/po`, jsonData);
-    console.log('Response:', response.data);
-  } catch (error) {
-      console.error('Error:', error);
-  }
-}
