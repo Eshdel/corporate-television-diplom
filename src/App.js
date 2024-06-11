@@ -5,7 +5,7 @@ import Timeline from "./Timeline/Timeline";
 import ItemOptionHolder from "./ItemOptionHolder/ItemOptionHolder";
 import TrashBin from "./TrashBin/Trashbin";
 import DatePicker from "./DatePicker/DatePicker";
-import { getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, deleteMedia, deleteMediaFromTimeline, updateElement } from "./Api";
+import { getListOfMediaFiles, getListOfMediaOnTimeline, uploadMediaFile, placeElement, deleteMedia, deleteMediaFromTimeline, updateElement, deleteUnloadedMedia, deleteUselessMedia } from "./Api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -32,8 +32,6 @@ function getBaseFileName(fileName) {
   return parts.slice(0, -2).join('.');
 }
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 function App() {
   const moment = require('moment-timezone');
 
@@ -54,6 +52,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('video'); // Добавим состояние для активной вкладки
   const [showAllFiles, setShowAllFiles] = useState(false);
   const fileInputRef = useRef(null);
+  const intervalRef = useRef(null);
+  const isFirstRun = useRef(true);
 
   const updateMediaFileList = async () => {
     try {
@@ -143,6 +143,31 @@ function App() {
       updateElementsOnTimeline();
     }
   }, [mediaFiles]);
+
+  //WARNING
+  // useEffect(() => {
+  //   const setupInterval = () => {
+  //     intervalRef.current = setInterval(async () => {
+  //       await deleteUnloadedMedia();
+  //       await deleteUselessMedia();
+  //     }, 10 * 60 * 1000); // 10 минут в миллисекундах
+  //   };
+
+  //   if (isFirstRun.current) {
+  //     isFirstRun.current = false;
+  //     // Устанавливаем таймер для первого запуска
+  //     setTimeout(setupInterval, 10 * 60 * 1000); // 10 минут в миллисекундах
+  //   } else {
+  //     setupInterval();
+  //   }
+
+  //   // Очищаем интервал при размонтировании компонента
+  //   return () => {
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //   };
+  // }, []);
 
   //For Tests
   useEffect(() => {

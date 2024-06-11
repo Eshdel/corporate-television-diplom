@@ -231,8 +231,9 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
 
   useEffect(() => {
     let timeoutId;
-
+  
     const handleWheel = (event) => {
+      if (!event.altKey) return; // Проверяем, удерживается ли клавиша Ctrl
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         if (event.deltaY > 0) {
@@ -242,17 +243,16 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
         }
       }, 200);
     };
-
+  
     const element = itemsContentRef.current;
     if (element) {
       element.addEventListener("wheel", handleWheel, { passive: true });
     }
-
+  
     return () => {
       if (element) {
         element.removeEventListener("wheel", handleWheel);
       }
-     
       clearTimeout(timeoutId);
     };
   }, [zoomIn, zoomOut]);

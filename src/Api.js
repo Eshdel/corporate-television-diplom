@@ -157,3 +157,25 @@ export const getMediaFrame = async (fileName, frameNumber) => {
       throw error;
   }
 };
+
+export const deleteUnloadedMedia = async () => {
+  try {
+    const response = await axios.delete(`${link}/deleteunloadedmedia`);
+    console.log('deleteUnloadedMedia :', response);
+    return response.data;
+  } catch (error) {
+    console.error('Error  del unload:', error);
+    throw error;
+  }
+};
+
+export const deleteUselessMedia = async () => {
+  try {
+    const response = await axios.delete(`${link}/deleteallrefmedia`);
+    console.log('Delete uselessmedia :', response);
+    return response.data;
+  } catch (error) {
+    console.error('Error del useless:', error);
+    throw error;
+  }
+};
