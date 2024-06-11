@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from "react";
 import "./ItemOptionHolder.css";
-
+import {getMediaFrame} from "../Api.js";
 
 const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, deleteItem, addRepeatingItems }) => {
+  const [frameImage, setFrameImage] = useState(null);
+
+  useEffect(() => {
+    if (selectedItem && selectedItem.type === 'video') {
+      loadImageFrame();
+    }
+  }, [selectedItem]);
+
+  // Функция для загрузки стоп-кадра
+  const loadImageFrame = async () => {
+    if (selectedItem.type === 'video') {
+      try {
+        const frameNumber = 0; // Номер кадра, который вы хотите загрузить
+        const response = await getMediaFrame(selectedItem.name + '.'+ selectedItem.format, frameNumber);
+        const imageUrl = URL.createObjectURL(response);
+        setFrameImage(imageUrl);
+      } catch (error) {
+        console.error('Error loading image frame:', error);
+      }
+    }
+  };
+  
   const formatTime = (time) => {
 
     let hours = Math.floor(time);
@@ -139,6 +161,12 @@ const ItemOptionHolder = ({ selectedItem, updateStartTime, updateDuration, delet
           <p>Are you sure you want to delete this item?</p>
           <button onClick={confirmDelete}>Yes</button>
           <button onClick={cancelDelete}>No</button>
+        </div>
+      )}
+
+      {selectedItem.type === 'video' && (
+        <div className="frame-preview">
+          {frameImage && <img src={frameImage} alt="Frame" style={{ maxWidth: '100%', maxHeight: '80vh' }} />}
         </div>
       )}
 

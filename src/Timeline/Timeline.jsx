@@ -1,19 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./Timeline.css";
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-const convertDecimalToTime = (decimalTime) => {
-  const hours = Math.floor(decimalTime);
-  const minutes = Math.floor((decimalTime - hours) * 60);
-  const seconds = Math.round(((decimalTime - hours) * 60 - minutes) * 60);
-
-  const adjustedSeconds = seconds === 60 ? 0 : seconds;
-  const adjustedMinutes = seconds === 60 ? minutes + 1 : minutes;
-
-  const formattedTime = `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}:${adjustedSeconds.toString().padStart(2, '0')}`;
-  return formattedTime;
-};
 
 const zoomLevels = [0.5, 1, 2, 6, 18, 72];
 const widthLabels = 300;
@@ -90,7 +77,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   };
 
   const handleResizeMouseMove = useCallback((e) => {
-    if (resizingItem && resizingItem.type != 'video') {
+    if (resizingItem && resizingItem.sourceType != 'video') {
       const deltaX = e.clientX - dragStartPosition.x;
       let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
       let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
@@ -256,10 +243,16 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
       }, 200);
     };
 
-    window.addEventListener("wheel", handleWheel);
+    const element = itemsContentRef.current;
+    if (element) {
+      element.addEventListener("wheel", handleWheel, { passive: true });
+    }
 
     return () => {
-      window.removeEventListener("wheel", handleWheel);
+      if (element) {
+        element.removeEventListener("wheel", handleWheel);
+      }
+     
       clearTimeout(timeoutId);
     };
   }, [zoomIn, zoomOut]);

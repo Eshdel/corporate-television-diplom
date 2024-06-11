@@ -25,6 +25,15 @@ function generateRandomId(min = 1000, max = 10000000) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getBaseFileName(fileName) {
+  // Разделяем имя файла по точкам
+  const parts = fileName.split('.');
+  // Возвращаем все части, кроме последних двух
+  return parts.slice(0, -2).join('.');
+}
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 function App() {
   const moment = require('moment-timezone');
 
@@ -40,17 +49,11 @@ function App() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showTrashBin, setShowTrashBin] = useState(false);
-  const [showConvertDialog, setShowConvertDialog] = useState(false);
-  const [fileToConvert, setFileToConvert] = useState(null);
-  const [converting, setConverting] = useState(false);
   const [serverTimezone, setServerTimezone] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false); // Добавим состояние для отображения зоны перетаскивания
   const [activeTab, setActiveTab] = useState('video'); // Добавим состояние для активной вкладки
+  const [showAllFiles, setShowAllFiles] = useState(false);
   const fileInputRef = useRef(null);
-
-  const uploadElements = {
-    // upload to server new elements on timeline
-  }
 
   const updateMediaFileList = async () => {
     try {
@@ -62,10 +65,10 @@ function App() {
         duration: (file.seconds || 60) / 3600,
         valueType: file.value_type,
         type: file.file_type,
-        refs: Array.isArray(file.refs) && file.refs.length ? file.refs.join(', ') : ''
+        refs: file.refs
       }));
-      console.log("Uploaded mediaFiles from server", transformedResponse);
       setMediaFiles(transformedResponse);
+      console.log("Uploaded mediaFiles from server", transformedResponse);
     } catch (error) {
       // Show a user-friendly error message
       toast.error(`Failed to load media files. Please try again later. Error: ${error.message}`);
@@ -87,6 +90,17 @@ function App() {
 
         const startDate = newStartDate.toDate();
         const endDate = newEndDate.toDate();
+        console.log("Med in updateElem",mediaFiles);
+        
+        const sourceType = mediaFiles.find(file => 
+          file.name === getBaseFileName(element.file_name) && file.valueType === 'source'
+        )?.type || 'video';
+        
+        const sourceName = getBaseFileName(element.file_name);
+
+        const sourceFormat = mediaFiles.find(file => 
+          file.name === getBaseFileName(element.file_name)
+        )?.format || '';
 
         return {
           id: element.id,
@@ -96,6 +110,9 @@ function App() {
           priority: element.priority,
           type: 'video',
           format: element.file_format,
+          sourceName: sourceName,
+          sourceType: sourceType,
+          sourceFormat: sourceFormat,
           startDate: moment(startDate).format('YYYY-MM-DD'),
           endDate: moment(endDate).format('YYYY-MM-DD'),
           getingDur: (endDate - startDate),
@@ -114,9 +131,18 @@ function App() {
   };
 
   useEffect(() => {
-    updateMediaFileList();
-    updateElementsOnTimeline();
+    const initializeData = async () => {
+      await updateMediaFileList();
+    };
+
+    initializeData();
   }, []);
+
+  useEffect(() => {
+    if (mediaFiles.length > 0) {
+      updateElementsOnTimeline();
+    }
+  }, [mediaFiles]);
 
   //For Tests
   useEffect(() => {
@@ -125,11 +151,7 @@ function App() {
     }
   }, [allElementsOnTimeline]);
 
-  useEffect(() => {
-    if (converting) {
-      toast.info('Converting file');
-    }
-  }, [converting]);
+
 
   useEffect(() => {
     const filteredElements = allElementsOnTimeline.filter(item => item.startDate === selectedDate);
@@ -209,17 +231,24 @@ function App() {
 
   const deleteItemFromTimeline = async () => {
     try {
-      await deleteMediaFromTimeline(selectedItem.id);
-      console.log('Element deleted successfully from timeline.')
-      toast.success(`${selectedItem.name}.${selectedItem.format} deleted successfully`);
+      const elementToDelete = selectedItem;
+
+      if (newElementsOnTimeline.includes(elementToDelete.id)) {
+        setNewElementsOnTimeline(prev => prev.filter(id => id !== elementToDelete.id));
+        toast.success(`${elementToDelete.name}.${elementToDelete.format} deleted successfully`);
+      } else {
+        await deleteMediaFromTimeline(elementToDelete.id);
+        console.log('Element deleted successfully from timeline.');
+        toast.success(`${elementToDelete.name}.${elementToDelete.format} deleted successfully`);
+      }
+
+      setAllElementsOnTimeline(prevElements => prevElements.filter(item => item.id !== elementToDelete.id));
+
+      setSelectedItem(null);
     } catch (error) {
       console.error('Failed to delete element from timeline:', error);
       toast.error(error);
     }
-
-    updateElementsOnTimeline();
-
-    setSelectedItem(null);
   };
 
   const handleDropOnTrashBin = (e) => {
@@ -234,7 +263,7 @@ function App() {
   const confirmDelete = async () => {
     if (itemToDelete) {
       try {
-        await deleteMedia(itemToDelete.type, itemToDelete.name.split('.')[0], itemToDelete.name.split('.')[1]);
+        await deleteMedia(itemToDelete.type, itemToDelete.name, itemToDelete.format);
         await updateMediaFileList();
         toast.success(`${itemToDelete.name} deleted successfully`);
       } catch (error) {
@@ -345,11 +374,14 @@ function App() {
       for (const newElementId of newElementsOnTimeline) {
         const newElement = allElementsOnTimeline.find(item => item.id === newElementId);
         if (newElement) {
+          const updatedElements = allElementsOnTimeline.filter(item => item.id !== newElement.id);
+          setAllElementsOnTimeline(updatedElements);
+          setSelectedItem(null);
           await placeElement(
             newElement.type,
             newElement.name,
             newElement.format,
-            newElement.startDateTime,
+            moment(`${selectedDate} ${convertDecimalToTime(newElement.startTime)}`).format('YYYY-MM-DD HH:mm:ss'),
             newElement.duration * 3600,
             newElement.priority
           );
@@ -363,20 +395,28 @@ function App() {
         if (modifiedElement) {
           console.log('Processing modified element duration:', modifiedElement);
           await deleteMediaFromTimeline(modifiedElement.id);
+          console.log("Before",allElementsOnTimeline);
+          const updatedElements = allElementsOnTimeline.filter(item => item.id !== modifiedElement.id);
+          setAllElementsOnTimeline(updatedElements);
+          console.log("After",allElementsOnTimeline);
+          setSelectedItem(null);
           await placeElement(
-            modifiedElement.type,
-            modifiedElement.name,
-            modifiedElement.format,
-            modifiedElement.startDateTime,
+            modifiedElement.sourceType,
+            modifiedElement.sourceName,
+            modifiedElement.sourceFormat,
+            moment(`${selectedDate} ${convertDecimalToTime(modifiedElement.startTime)}`).format('YYYY-MM-DD HH:mm:ss'),//modifiedElement.startDateTime,
             modifiedElement.duration * 3600,
             modifiedElement.priority
           );
         }
       }
+      // Убираем из startTimeChanges элементы, которые есть в durationChanges
+      const filteredStartTimeChanges = startTimeChanges.filter(id => !durationChanges.includes(id));
+
       setDurationChanges([]);
 
       // Затем обрабатываем изменения времени начала
-      for (const startTimeChangeId of startTimeChanges) {
+      for (const startTimeChangeId of filteredStartTimeChanges) {
         const modifiedElement = allElementsOnTimeline.find(item => item.id === startTimeChangeId);
         if (modifiedElement) {
           const newStartDateTime = moment(`${modifiedElement.startDate} ${convertDecimalToTime(modifiedElement.startTime)}`, 'YYYY-MM-DD HH:mm:ss');
@@ -397,7 +437,7 @@ function App() {
 
   const renderMediaFiles = () => {
     return mediaFiles
-      .filter(item => item.type === activeTab)
+      .filter(item => item.type === activeTab && (showAllFiles || item.valueType === 'source'))
       .map((item) => (
         <div className={`list-item ${item.type}`} key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)} onDragEnd={handleDragEnd}>
           <div className="file-icon">
@@ -436,6 +476,10 @@ function App() {
             <FaFilePowerpoint /> Presentation
           </button>
         </div>
+        <label>
+        <input type="checkbox" checked={showAllFiles} onChange={() => setShowAllFiles(!showAllFiles)} />
+          Show all files
+        </label>
         <div className="scrollable-list">
           {renderMediaFiles()}
         </div>

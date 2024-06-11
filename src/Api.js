@@ -7,7 +7,7 @@ import FormData from 'form-data';
 import moment from 'moment-timezone';
 
 
-const link = 'http://158.160.167.74:4004';
+const link = 'http://158.160.170.215:4004';
 export const getListOfMediaFiles = async () => {
     try {
         const response = await axios.get(`${link}/listmedia`);
@@ -64,6 +64,7 @@ export const deleteMedia = async (fileType, fileName, fileFormat) => {
   const json = { file_type: fileType, file_name: fileName, file_format: fileFormat };
   
   try {
+      console.log("Delete media", `${fileType},${fileName},${fileFormat}`);
       const response = await axios.delete(`${link}/deletemedia`, { data: json });
       console.log('Status code:', response.status);
       console.log(response.data);
@@ -142,6 +143,17 @@ export const updateElement = async (elementId, newStartTime, timeZone) => {
       return response.data;
   } catch (error) {
       console.error('updateElement Error:', error.response.data);
+      throw error;
+  }
+};
+
+export const getMediaFrame = async (fileName, frameNumber) => {
+  try {
+      const response = await axios.get(`${link}/viewmedia/${fileName}/${frameNumber}`, { responseType: 'blob' });
+      console.log('Frame response:', response);
+      return response.data;
+  } catch (error) {
+      console.error('Error fetching media frame:', error);
       throw error;
   }
 };
