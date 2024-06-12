@@ -59,7 +59,7 @@ function App() {
     try {
       const response = await getListOfMediaFiles();
       const transformedResponse = response.map(file => ({
-        id: crypto.randomUUID(),
+        id: generateRandomId(),
         name: `${file.file_name}`,
         format: file.file_format,
         duration: (file.seconds || 60) / 3600,
