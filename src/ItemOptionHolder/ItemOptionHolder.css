@@ -11,7 +11,7 @@
 
 h2 {
   font-size: 1.5em;
-  margin-bottom: 10px;
+  bottom: 10px;
 }
 
 .input-group {
@@ -26,6 +26,7 @@ h2 {
 
 input[type="text"],
 input[type="number"],
+input[type="date"],
 select {
   width: 100%;
   padding: 8px;
@@ -43,10 +44,6 @@ input.invalid-duration {
   font-size: 0.9em;
 }
 
-.item-details {
-  margin-bottom: 20px;
-}
-
 .delete-button {
   background-color: #e74c3c;
   color: white;
@@ -54,6 +51,7 @@ input.invalid-duration {
   padding: 10px;
   border-radius: 4px;
   cursor: pointer;
+  width: 100%;
 }
 
 .delete-button:hover {
@@ -91,8 +89,18 @@ input.invalid-duration {
   color: #333;
 }
 
+.frame-preview {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .repeat-options {
   margin-top: 20px;
+}
+
+.repeat-options h3 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
 }
 
 .repeat-days {
@@ -117,6 +125,7 @@ input.invalid-duration {
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+  width: 100%;
 }
 
 .add-repeat-button:hover {
