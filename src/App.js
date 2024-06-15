@@ -55,6 +55,19 @@ function App() {
   const intervalRef = useRef(null);
   const isFirstRun = useRef(true);
 
+  useEffect(() => {
+    console.log('startTimeChanges:', startTimeChanges);
+  }, [startTimeChanges]);
+
+  useEffect(() => {
+    console.log('durationChanges:', durationChanges);
+  }, [durationChanges]);
+
+  useEffect(() => {
+    console.log('newElementsOnTimeline:', newElementsOnTimeline);
+  }, [newElementsOnTimeline]);
+
+
   const updateMediaFileList = async () => {
     try {
       const response = await getListOfMediaFiles();
@@ -83,10 +96,12 @@ function App() {
       const data = await getListOfMediaOnTimeline();
       const newTimezone = data.find(element => element.timezone)?.timezone;
       setServerTimezone(newTimezone);
-
+      const my_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log("My timnezone :", my_timezone);
+      console.log("Server timezone:", newTimezone);
       const transformedData = data.filter(element => !element.timezone).map(element => {
-        const newStartDate = moment.tz(element.full_datetime_start, serverTimezone).local();
-        const newEndDate = moment.tz(element.full_datetime_end, serverTimezone).local();
+        const newStartDate = moment.tz(element.full_datetime_start,newTimezone).tz(my_timezone);
+        const newEndDate = moment.tz(element.full_datetime_end, newTimezone).tz(my_timezone);
 
         const startDate = newStartDate.toDate();
         const endDate = newEndDate.toDate();
@@ -243,15 +258,26 @@ function App() {
   };
 
   const updateItemDuration = (itemId, newDuration) => {
-    setAllElementsOnTimeline(prevItems => prevItems.map(item =>
-      item.id === itemId ? { ...item, duration: newDuration } : item
-    ));
-    setDurationChanges(prevIds => {
-      if (!prevIds.includes(itemId) && !newElementsOnTimeline.includes(itemId)) {
-        return [...prevIds, itemId];
-      }
-      return prevIds;
-    });
+    let isUpdated = false;
+  
+    setAllElementsOnTimeline(prevItems =>
+      prevItems.map(item => {
+        if (item.id === itemId && item.sourceType !== 'video') {
+          isUpdated = true;
+          return { ...item, duration: newDuration };
+        }
+        return item;
+      })
+    );
+  
+    if (isUpdated) {
+      setDurationChanges(prevIds => {
+        if (!prevIds.includes(itemId) && !newElementsOnTimeline.includes(itemId)) {
+          return [...prevIds, itemId];
+        }
+        return prevIds;
+      });
+    }
   };
 
   const deleteItemFromTimeline = async () => {

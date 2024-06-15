@@ -7,7 +7,7 @@ import FormData from 'form-data';
 import moment from 'moment-timezone';
 
 
-const link = 'http://158.160.170.215:4004';
+const link = 'http://212.20.46.198:4004';
 export const getListOfMediaFiles = async () => {
     try {
         const response = await axios.get(`${link}/listmedia`);

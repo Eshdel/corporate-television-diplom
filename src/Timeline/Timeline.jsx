@@ -18,7 +18,7 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   const [resizingItem, setResizingItem] = useState(null);
   const [resizeDirection, setResizeDirection] = useState(null);
 
-  const [zoomMod, setZoomMod] = useState(1);
+  const [zoomMod, setZoomMod] = useState(4);
   const [scale, setScale] = useState(zoomLevels[zoomMod]);
   const [contentWidth, setContentWidth] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -77,7 +77,12 @@ const Timeline = ({ items, updateItemStartTime, updateItemDuration, setSelectedI
   };
 
   const handleResizeMouseMove = useCallback((e) => {
+    if (resizingItem && resizingItem.valueType=== 'source' && resizingItem.type === 'video') {
+      return;
+    }
+
     if (resizingItem && resizingItem.sourceType != 'video') {
+      if(resizingItem.sourceType == 'source' && resizingItem.type == 'video') return;
       const deltaX = e.clientX - dragStartPosition.x;
       let newWidth = dragStartPosition.width + (resizeDirection === 'right' ? deltaX : -deltaX);
       let newLeft = dragStartPosition.left + (resizeDirection === 'left' ? deltaX : 0);
